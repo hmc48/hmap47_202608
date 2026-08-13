@@ -1,0 +1,2859 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-R23Q109BZT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-R23Q109BZT');
+</script>
+
+<meta charset="utf-8">
+<title>医療・介護施設マップ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css">
+<style>
+body { margin:0; padding:0; overflow:hidden; font-family: sans-serif; }
+#map { height:100vh; width:100vw; z-index:1; }
+#map-title-bar {
+  position: fixed; top: 15px; left: 50px; z-index: 4000;
+  background: #ffe4e1; padding: 5px 12px; border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: black;
+  display: flex; align-items: baseline; white-space: nowrap; pointer-events: none;
+}
+#main-title { font-size: 8pt; font-weight: bold; margin-right: 10px; }
+#credit-title { font-size: 7pt; font-weight: bold; margin-right: 10px; }
+#zoom-indicator {
+  position: fixed; top: 15px; right: 65px; z-index: 4000;
+  background: rgba(255, 255, 255, 0.8); padding: 5px 10px;
+  border: 1px solid #ccc; border-radius: 4px; font-weight: bold; font-size: 9px; pointer-events: none;
+}
+/* ボタンサイズ */
+.circle-btn {
+  width:36px; height:36px; border-radius:50%; text-align:center; line-height:36px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.3); cursor:pointer; font-size:18px; z-index:2000;
+  position:fixed; background:white;
+}
+/* 最初非表示 */
+.right-tool {
+  display: none;
+}
+
+/* ★最初のホーム */
+#toggle-tools-btn {
+  top: 15px;   /* ←位置はあとで微調整OK */
+  right: 15px;
+  background:#fd63db;
+  color:white;
+}
+
+#control-btn { top:55px; right:15px; background:#007bff; color:white; }
+#search-btn { top:90px; right:15px; background:#28a745; color:white; }
+#info-btn { top:130px; right:15px; background:#ff69b4; color:white; }
+#jump-btn { top:170px; right:15px; background:#ff9800; color:white; }
+/* 追加：経路探索ボタンとパネル */
+#route-btn { top:210px; right:15px; background:#673ab7; color:white; }
+#reload-btn { top:250px; right:15px; background:#6c757d; color:white; }
+#route-panel {
+  display:none; position:fixed; top:45px; right:75px; 
+  background:white; padding:15px; border-radius:8px; z-index:4000;
+  box-shadow:0 4px 15px rgba(0,0,0,0.2); width:200px;
+}
+.route-info { margin-top:10px; padding:8px; background:#f8f9fa; border-radius:4px; font-size:12px; border:1px solid #ddd; }
+#controls, #search-panel, #info-panel {
+  display:none; position:fixed; right:15px; width:220px; 
+  background:white; padding:15px; border-radius:8px; z-index:2000;
+  max-height:75vh; overflow-y:auto; box-shadow:0 4px 15px rgba(0,0,0,0.2);
+}
+#controls { top:45px; right:65px; }
+#search-panel { top:45px; right:65px;}
+#info-panel { bottom:20px; left:20px; right:20px; width:auto; font-size:14px; z-index:3000; }
+.close-x { float: right; font-size: 30px; font-weight: bold; cursor: pointer; color: #888; }
+.section-title { font-weight:bold; margin-top:10px; border-bottom:1px solid #eee; }
+
+.layer-item { margin-bottom: 8px; font-size: 14px; display: flex; align-items: center; }
+input[type="checkbox"], input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
+
+/* 追加：カラーパレット用ボタンのスタイル */
+.pm-color-picker-container {
+  margin-top: 5px !important;
+  border-top: 1px solid #ccc;
+  padding-top: 5px;
+}
+.pm-color-btn {
+  width: 34px; height: 34px; background: white; border: 2px solid rgba(0,0,0,0.2);
+  border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; box-sizing: border-box;
+}
+.pm-color-btn:hover { background: #f4f4f4; }
+#pm-color-input {
+  position: absolute; opacity: 0; width: 34px; height: 34px; cursor: pointer;
+}
+
+/* 追加：テキスト設定パネルのスタイル */
+#text-config-panel {
+  display:none; position:fixed; right:70px; top:40px; /* 右側に出るように変更 */
+  background:white; padding:10px; border-radius:8px; z-index:4000;
+  box-shadow:0 2px 10px rgba(0,0,0,0.2); width: 180px;
+}
+
+.config-item { margin-bottom: 8px; font-size: 12px; }
+.config-item label { display: block; font-weight: bold; margin-bottom: 3px; }
+.config-item input, .config-item select {
+   font-size: 16px;   /* ★これを追加（最重要） */
+   width: 100%;
+   padding: 5px;
+   box-sizing: border-box;
+   border: 1px solid #ccc;
+   border-radius: 4px;
+}
+
+.btn-container { display: flex; gap: 5px; margin-bottom: 5px; }
+button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
+.search-item:hover { background:#f0f0f0; cursor:pointer; }
+    /* 図形描写追加 */
+    .leaflet-top.leaflet-right {
+      margin-top: 275px;
+    }
+
+    /* 図形描画レイヤーをマーカーより下に配置 */
+    .leaflet-overlay-pane {
+      z-index: 400 !important;
+    }
+
+    /* === ここから追加 === */
+    #image-config-panel {
+      display:none; position:fixed; right:70px; top:140px; 
+      background:white; padding:10px; border-radius:8px; z-index:4000;
+      box-shadow:0 2px 10px rgba(0,0,0,0.2); width: 200px;
+    }
+    .img-container { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .img-sample { width: 40px; height: 40px; cursor: pointer; border: 1px solid #ccc; object-fit: cover; }
+    .img-sample:hover { border-color: #fd63db; }
+    .editing-image { outline: 2px dashed #ff4500; cursor: move; }
+    /* === ここまで追加 === */
+
+
+  </style>
+
+</head>
+<body>
+  <div id="map-title-bar"><span id="main-title">沖縄県版</span> <span id="credit-title">© OpenStreetMap</span></div>
+  <div id="zoom-indicator">Zoom: --</div>
+
+  <div id="text-config-panel">
+    <div class="config-item">
+      <label>表示テキスト</label>
+      <input type="text" id="custom-text-input" placeholder="文字を入力">
+    </div>
+    <div class="config-item">
+      <label>フォントサイズ</label>
+      <input type="number" id="custom-text-size" value="16" min="8" max="100">
+    </div>
+    <div class="config-item">
+      <label>フォント種類</label>
+      <select id="custom-text-family">
+        <option value="'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif">ゴシック体</option>
+        <option value="'Hiragino Mincho ProN', 'MS Mincho', serif">明朝体</option>
+        <option value="'Courier New', monospace">等幅フォント</option>
+      </select>
+    </div>
+    <div style="font-size:10px; color:#666; margin-bottom: 5px;">※地図をクリック</div>
+    <button onclick="toggleTextMode(false)" style="width:100%; padding:5px; cursor:pointer;">閉じる</button>
+  </div>
+
+    <div id="image-config-panel">
+      <div class="section-title">画像を選択</div>
+      <div class="img-container" id="github-images"></div>
+      <input type="file" id="image-file-input" accept="image/*" style="font-size: 11px; width: 100%;">
+      <hr>
+      <div class="section-title">変形操作</div>
+      <div class="config-item">
+        <label>回転 (<span id="rot-val">0</span>°)</label>
+        <input type="range" id="img-rotate" min="0" max="360" value="0">
+      </div>
+      <div class="config-item">
+        <label>拡大縮小 (<span id="scale-val">1.0</span>倍)</label>
+        <input type="range" id="img-scale" min="0.1" max="5.0" step="0.1" value="1.0">
+      </div>
+      <button id="btn-img-confirm" style="width:100%; padding:8px; background:#28a745; color:white; border:none; margin-top:5px; cursor:pointer;">確定</button>
+      <button id="btn-img-delete" style="width:100%; padding:8px; background:#dc3545; color:white; border:none; margin-top:5px; cursor:pointer;">削除</button>
+      <button onclick="closeImagePanel()" style="width:100%; padding:5px; margin-top:5px; cursor:pointer;">閉じる</button>
+    </div>
+
+  <div id="toggle-tools-btn" class="circle-btn" onclick="toggleRightTools()">🏠</div>
+  <div id="control-btn" class="circle-btn right-tool" onclick="togglePanel('controls')">🛠️</div>
+  <div id="controls">
+    <span class="close-x" onclick="togglePanel('controls')">×</span>
+    <div class="section-title">境界線の一括操作</div>
+    <div class="btn-container">
+      <button class="menu-sub-btn" id="selectBoundariesBtn">全て選択</button>
+      <button class="menu-sub-btn" id="deselectBoundariesBtn">全て解除</button>
+    </div>
+    <div class="section-title">施設種類の一括操作</div>
+    <div class="btn-container">
+      <button class="menu-sub-btn" id="selectFacilitiesBtn">全て選択</button>
+      <button class="menu-sub-btn" id="deselectFacilitiesBtn">全て解除</button>
+    </div>
+    <div class="section-title">地図の種類</div>
+    <label class="layer-item"><input type="radio" name="baseLayer" value="標準" checked> オープンストリートマップ</label>
+    <label class="layer-item"><input type="radio" name="baseLayer" value="航空写真"> 航空写真(国土地理院)</label>
+    <label class="layer-item"><input type="radio" name="baseLayer" value="国土地理院地図"> 国土地理院地図</label>
+    <div class="section-title">境界線・施設種類</div>
+
+<div class="section-title" style="margin-top:5px; color:#555; font-size:11px;">▼ 行政境界（町丁目）</div>
+    <label class="layer-item"><input type="checkbox" class="boundary-toggle" value="町丁目境界01"> 北部医療圏</label>
+    <label class="layer-item"><input type="checkbox" class="boundary-toggle" value="町丁目境界02"> 中部医療圏</label>
+    <label class="layer-item"><input type="checkbox" class="boundary-toggle" value="町丁目境界03"> 南部医療圏</label>
+    <label class="layer-item"><input type="checkbox" class="boundary-toggle" value="町丁目境界04"> 宮古医療圏</label>
+    <label class="layer-item"><input type="checkbox" class="boundary-toggle" value="町丁目境界05"> 八重山医療圏</label>
+<div class="section-title" style="margin-top:10px; color:#555; font-size:11px;">▼ 施設種類</div>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="病院"> 病院</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="診療所"> 診療所</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="歯科"> 歯科</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="助産院"> 助産院</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="薬局"> 薬局</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問介護"> 訪問介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問入浴介護"> 訪問入浴介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問看護"> 訪問看護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問リハビリテーション"> 訪問リハビリテーション</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="通所介護"> 通所介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="通所介護（療養通所介護）"> 通所介護（療養通所介護）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="通所リハビリテーション"> 通所リハビリテーション</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="福祉用具貸与"> 福祉用具貸与</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所生活介護"> 短期入所生活介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所療養介護（介護老人保健施設）"> 短期入所療養介護（介護老人保健施設）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所療養介護（療養病床を有する病院等）"> 短期入所療養介護（療養病床を有する病院等）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所療養介護（介護医療院）"> 短期入所療養介護（介護医療院）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="認知症対応型共同生活介護"> 認知症対応型共同生活介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（有料老人ホーム）"> 特定施設入居者生活介護（有料老人ホーム）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（軽費老人ホーム）"> 特定施設入居者生活介護（軽費老人ホーム）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（サービス付き高齢者向け住宅）"> 特定施設入居者生活介護（サービス付き高齢者向け住宅）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（有料老人ホーム・外部サービス利用型）"> 特定施設入居者生活介護（有料老人ホーム・外部サービス利用型）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（軽費老人ホーム・外部サービス利用型）"> 特定施設入居者生活介護（軽費老人ホーム・外部サービス利用型）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（サービス付き高齢者向け住宅・外部サービス利用型）"> 特定施設入居者生活介護（サービス付き高齢者向け住宅・外部サービス利用型）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型特定施設入居者生活介護（有料老人ホーム）"> 地域密着型特定施設入居者生活介護（有料老人ホーム）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型特定施設入居者生活介護（軽費老人ホーム）"> 地域密着型特定施設入居者生活介護（軽費老人ホーム）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型特定施設入居者生活介護（サービス付き高齢者向け住宅）"> 地域密着型特定施設入居者生活介護（サービス付き高齢者向け住宅）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定福祉用具販売"> 特定福祉用具販売</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="居宅介護支援"> 居宅介護支援</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護老人福祉施設"> 介護老人福祉施設</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護老人保健施設"> 介護老人保健施設</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護療養型医療施設"> 介護療養型医療施設</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型介護老人福祉施設入所者生活介護"> 地域密着型介護老人福祉施設入所者生活介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護医療院"> 介護医療院</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="夜間対応型訪問介護"> 夜間対応型訪問介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="認知症対応型通所介護"> 認知症対応型通所介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="小規模多機能型居宅介護"> 小規模多機能型居宅介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="定期巡回・随時対応型訪問介護看護"> 定期巡回・随時対応型訪問介護看護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="看護小規模多機能型居宅介護"> 看護小規模多機能型居宅介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型通所介護"> 地域密着型通所介護</label>
+
+  </div>
+  <div id="search-btn" class="circle-btn right-tool" onclick="togglePanel('search-panel')">🔍</div>
+  <div id="search-panel">
+    <input type="text" id="search-input" placeholder="and検索（例：内科 五反田）" style="width:100%; padding:10px; box-sizing:border-box; font-size:16px;">
+    <button id="show-all-results-btn" style="width:100%; margin-top:10px; padding:8px; cursor:pointer; background:#28a745; color:white; border:none; border-radius:4px; font-weight:bold;">検索結果をすべて表示</button>
+    <div id="search-results" style="max-height:200px; overflow-y:auto; margin-top:10px;"></div>
+  </div>
+  <div id="info-btn" class="circle-btn right-tool" onclick="togglePanel('info-panel')">i</div>
+  <div id="jump-btn" class="circle-btn right-tool" onclick="jumpToLocation()">📍</div>
+  
+  <div id="route-btn" class="circle-btn right-tool" onclick="toggleRouteMode()">🚗</div>
+  <div id="reload-btn" class="circle-btn right-tool" onclick="confirmReload()">↩️</div>
+  
+  <div id="route-panel">
+    <span class="close-x" onclick="toggleRouteMode()">×</span>
+    <div style="font-weight:bold; margin-bottom:10px;">経路探索</div>
+    <label class="layer-item"><input type="radio" name="routeMode" value="car" checked> 🚗自動車</label>
+    <label class="layer-item"><input type="radio" name="routeMode" value="foot"> 🚶 徒歩</label>
+    <hr>
+    <div id="route-status" style="font-size:11px; color:#666; margin-bottom:5px;">
+      地図上を2箇所クリックしてください
+    </div>
+    <div id="route-result" class="route-info" style="display:none;"></div>
+    <button onclick="clearRoute()" style="width:100%; margin-top:10px; cursor:pointer; padding:5px;">リセット</button>
+  </div>
+
+  <div id="info-panel" onclick="this.style.display='none'">
+    <strong>医療・介護施設マップ　　　　★閉じる★</strong><br>
+    <span style="color:red;">★</span>病院
+    <span style="color:blue;">&hearts;</span>診療所
+    <span style="color:yellow;">♣</span>歯科
+    <span style="color:green;">♠</span>薬局
+    <span style="color:red;">■</span>助産院
+    <span style="color:brown;">●</span>介護<br>
+    【出典】<br>
+    医療情報ネットのオープンデータ（厚生労働省）
+    (2026年6月1日時点) <br>
+    <a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iryou/newpage_43373.html" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">厚生労働省の医療ページ</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="https://www.digital.go.jp/resources/open_data/public_data_license_v1.0" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">同利用規約</a><br>
+    介護サービス情報のオープンデータ（厚生労働省）
+    (2026年6月末時点)<br>
+    <a href="https://www.mhlw.go.jp/stf/kaigo-kouhyou_opendata.html" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">厚生労働省の介護ページ</a>
+    &nbsp;&nbsp;&nbsp;
+    <a href="https://www.mhlw.go.jp/chosakuken/index.html" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">同利用規約</a><br>
+    e-Stat国勢調査2020年<br>
+    【機能】<br>
+    <span style="
+        background-color: #fd63db; /* 背景をピンク色に */
+        border-radius: 50%;       /* 角を丸くして円に */
+        padding: 10px;            /* ピンと円の余白 */
+        display: inline-flex;     /* 中身（🏠）を中央寄せ */
+        align-items: center;
+        justify-content: center;
+        width: 5px;              /* 円の幅 */
+        height: 5px;             /* 円の高さ */
+    ">
+        🏠
+    </span>
+    ホーム<br>
+    <span style="
+        background-color: blue; /* 背景を青色に */
+        border-radius: 50%;       /* 角を丸くして円に */
+        padding: 10px;            /* ピンと円の余白 */
+        display: inline-flex;     /* 中身（🛠️）を中央寄せ */
+        align-items: center;
+        justify-content: center;
+        width: 5px;              /* 円の幅 */
+        height: 5px;             /* 円の高さ */
+    ">
+        🛠️
+    </span>
+    設定 地図種類変更、医療圏境界線表示<br>
+    　　施設選択（各ページへリンク）<br>
+    　　人口表示（境界線初期表示時）<br>
+    <span style="
+        background-color: green; /* 背景を緑色に */
+        border-radius: 50%;       /* 角を丸くして円に */
+        padding: 10px;            /* ピンと円の余白 */
+        display: inline-flex;     /* 中身（🔍）を中央寄せ */
+        align-items: center;
+        justify-content: center;
+        width: 5px;              /* 円の幅 */
+        height: 5px;             /* 円の高さ */
+    ">
+        🔍
+    </span>
+    検索機能(and検索)<br>
+    　　and検索の例:内科 秋葉原　診療所<br>
+    　　人口表示（境界線表示時）<br>
+    <span style="
+        background-color: orange; /* 背景をオレンジ色に */
+        border-radius: 50%;       /* 角を丸くして円に */
+        padding: 10px;            /* ピンと円の余白 */
+        display: inline-flex;     /* 中身（📍）を中央寄せ */
+        align-items: center;
+        justify-content: center;
+        width: 5px;              /* 円の幅 */
+        height: 5px;             /* 円の高さ */
+    ">
+        📍
+    </span>
+    住所検索(and検索)<br>
+    <span style="
+        background-color: blue; /* 背景を青色に */
+        border-radius: 50%;       /* 角を丸くして円に */
+        padding: 10px;            /* ピンと円の余白 */
+        display: inline-flex;     /* 中身（🚗）を中央寄せ */
+        align-items: center;
+        justify-content: center;
+        width: 5px;              /* 円の幅 */
+        height: 5px;             /* 円の高さ */
+    ">
+        🚗
+    </span>
+    経路探索（自動車、徒歩）<br>
+    <span style="
+        background-color: gray; /* 背景をグレーに */
+        border-radius: 50%;       /* 角を丸くして円に */
+        padding: 10px;            /* ピンと円の余白 */
+        display: inline-flex;     /* 中身（↩️）を中央寄せ */
+        align-items: center;
+        justify-content: center;
+        width: 5px;              /* 円の幅 */
+        height: 5px;             /* 円の高さ */
+    ">
+        ↩️
+    </span>
+    初期化<br>
+    <span style="
+        background-color: gray; /* 背景をグレー色に */
+        border-radius: 50%;       /* 角を丸くして円に */
+        padding: 10px;            /* ピンと円の余白 */
+        display: inline-flex;     /* 中身（✏️）を中央寄せ */
+        align-items: center;
+        justify-content: center;
+        width: 5px;              /* 円の幅 */
+        height: 5px;             /* 円の高さ */
+    ">
+        ✏️
+    </span>
+    線、四角形、多角形、円の描写、テキスト入力<br>
+    <span style="
+        background-color: yellow; /* 背景を黄色に */
+        border-radius: 50%;       /* 角を丸くして円に */
+        padding: 10px;            /* ピンと円の余白 */
+        display: inline-flex;     /* 中身（🖼️）を中央寄せ */
+        align-items: center;
+        justify-content: center;
+        width: 5px;              /* 円の幅 */
+        height: 5px;             /* 円の高さ */
+    ">
+        🖼️
+    </span>
+    任意の画像、イラストの挿入<br>
+    【利用規約・ご意見・ご感想・お問い合わせ】<br>
+    他都道府県は下記サイトへ<br>
+    本ツールは以下のサイトで作成しています。<br>
+    <a href="https://hmc48.github.io/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">https://hmc48.github.io/</a><br>
+    作成者:Mana48FanClub<br>
+  </div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
+  <script>
+    const colorMap = {"赤": "red", "青": "blue", "オレンジ": "orange", "緑": "green", "茶": "brown", "黄": "yellow"};
+    const shapeMap = {"病院": "star", "診療所": "heart", "歯科": "club", "助産院": "square", "薬局": "spade"};
+
+    const myRenderer = L.canvas({ padding: 0.5 });
+
+    L.CustomMarker = L.CircleMarker.extend({
+        _updatePath: function () {
+            const ctx = this._renderer._ctx;
+            const p = this._point;
+            const r = this._radius * 1.5;
+            const s = this.options.shape;
+            if (!this._renderer._drawing || this._empty()) return;
+
+            ctx.fillStyle = this.options.fillColor;
+            ctx.strokeStyle = this.options.color;
+            ctx.lineWidth = this.options.weight;
+            ctx.beginPath();
+
+            if (s === 'star') {
+                for(let i=0; i<5; i++) {
+                    ctx.lineTo(p.x + r * Math.cos((18+i*72)/180*Math.PI), p.y - r * Math.sin((18+i*72)/180*Math.PI));
+                    ctx.lineTo(p.x + (r/2.2) * Math.cos((54+i*72)/180*Math.PI), p.y - (r/2.2) * Math.sin((54+i*72)/180*Math.PI));
+                }
+            } else if (s === 'heart') {
+                ctx.moveTo(p.x, p.y + r*0.8);
+                ctx.bezierCurveTo(p.x-r*1.5, p.y-r*0.8, p.x-r*0.5, p.y-r*1.8, p.x, p.y-r*0.6);
+                ctx.bezierCurveTo(p.x+r*0.5, p.y-r*1.8, p.x+r*1.5, p.y-r*0.8, p.x, p.y+r*0.8);
+            } else if (s === 'club') {
+                ctx.arc(p.x, p.y-r*0.5, r*0.5, 0, Math.PI*2);
+                ctx.arc(p.x-r*0.5, p.y+r*0.2, r*0.5, 0, Math.PI*2);
+                ctx.arc(p.x+r*0.5, p.y+r*0.2, r*0.5, 0, Math.PI*2);
+                ctx.moveTo(p.x, p.y); ctx.lineTo(p.x-r*0.2, p.y+r*0.8); ctx.lineTo(p.x+r*0.2, p.y+r*0.8);
+            } else if (s === 'square') {
+                ctx.rect(p.x - r*0.7, p.y - r*0.7, r*1.4, r*1.4);
+            } else if (s === 'spade') {
+                ctx.moveTo(p.x, p.y-r);
+                ctx.bezierCurveTo(p.x+r*1.4, p.y+r*0.4, p.x+r*0.4, p.y+r*1.2, p.x, p.y+r*0.4);
+                ctx.bezierCurveTo(p.x-r*0.4, p.y+r*1.2, p.x-r*1.4, p.y+r*0.4, p.x, p.y-r);
+                ctx.moveTo(p.x, p.y+r*0.2); ctx.lineTo(p.x-r*0.2, p.y+r*0.8); ctx.lineTo(p.x+r*0.2, p.y+r*0.8);
+            } else {
+                ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+            }
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+        }
+    });
+
+    // マップの初期化
+    const map = L.map('map', {
+      center: [26.212600663693596, 127.68061259357493], // 緯度経度
+      zoom: 15,
+      preferCanvas: true, // これを追加
+      zoomSnap: 0.1,  // ズーム後の値を0.1単位で固定する
+      zoomDelta: 0.1, // ボタンやキーボード操作での変化量を0.1にする
+      wheelPxPerZoomLevel: 120 // ホイール操作の感度（数値が大きいほどゆっくり）
+    });
+
+    // ★ここに追加：境界線専用の階層（ペイン）を作成
+    map.createPane('boundaryPane');
+    map.getPane('boundaryPane').style.zIndex = 350; // 標準のオーバーレイ(400)より下に配置
+    map.getPane('boundaryPane').style.pointerEvents = 'none'; // 地図上のクリックを邪魔しない設定
+
+    // --- Leaflet-geoman 初期化 ---
+    map.pm.setLang('ja');
+    
+    // オプションは無料版で有効なものだけに整理
+    map.pm.setGlobalOptions({
+      snappable: true,
+      cursorMarker: true
+    });
+
+    // --- 【修正箇所】手動で半径を表示するロジックを追加 ---
+    map.on('pm:drawstart', ({ workingLayer }) => {
+      // 図形描画が始まったらテキストモードのパネルを閉じる
+      toggleTextMode(false); 
+
+      if (workingLayer instanceof L.Circle) {
+        workingLayer.on('pm:change', (e) => {
+          const radius = Math.round(e.layer.getRadius());
+          e.layer.bindTooltip(`半径: ${radius} m`, {
+            permanent: true,
+            direction: 'right',
+            className: 'js-measuring-tooltip'
+          }).openTooltip();
+        });
+      }
+    });
+
+    map.pm.addControls({
+      position: 'topright',
+    });
+    map.pm.removeControls(); // ★初期は非表示
+
+    // --- 描画色の初期値管理 ---
+    let currentSelectedColor = "#3388ff";
+
+    // --- テキストモードの管理 ---
+    let isTextMode = false;
+        
+    // 【追加】経路探索用の変数
+    let isRouteMode = false;
+    let waypoints = [];
+    let routeMarkers = [];
+    let routePolyline = null;
+
+    // 【追加】経路探索モードの切り替え
+    function toggleRouteMode() {
+        isRouteMode = !isRouteMode;
+        const panel = document.getElementById('route-panel');
+        
+        if (isRouteMode) {
+            panel.style.display = 'block';
+            toggleTextMode(false); // テキストモードはOFF
+            map.pm.disableDraw(); // 図形描画もOFF
+            document.getElementById('route-status').innerText = "出発地点をクリックしてください";
+            map.getContainer().style.cursor = 'crosshair';
+        } else {
+            panel.style.display = 'none';
+            clearRoute();
+            map.getContainer().style.cursor = '';
+        }
+    }
+
+    // 【追加】経路とマーカーをクリア
+    function clearRoute() {
+        waypoints = [];
+        routeMarkers.forEach(m => map.removeLayer(m));
+        routeMarkers = [];
+        if (routePolyline) {
+            map.removeLayer(routePolyline);
+            routePolyline = null;
+        }
+        document.getElementById('route-status').innerText = "地図上を2箇所クリックしてください";
+        document.getElementById('route-result').style.display = 'none';
+    }
+
+    // 【修正版】OSRM APIを使用して経路を計算
+    async function calculateRoute() {
+        if (waypoints.length < 2) return;
+
+        const mode = document.querySelector('input[name="routeMode"]:checked').value;
+        // OSRM標準サーバーのプロファイル名に合わせて修正 ('foot' が正解)
+        const profile = mode === 'car' ? 'driving' : 'foot'; 
+        
+        const url = `https://router.project-osrm.org/route/v1/${profile}/${waypoints[0].lng},${waypoints[0].lat};${waypoints[1].lng},${waypoints[1].lat}?overview=full&geometries=geojson`;
+
+        document.getElementById('route-status').innerText = "計算中...";
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.code !== 'Ok') throw new Error("Route error");
+
+            const route = data.routes[0];
+            const distance = (route.distance / 1000).toFixed(2); // km
+            
+            let duration;
+            if (mode === 'foot') {
+                // 徒歩の場合：OSRMは速めなので、日本の基準（分＝80m）に合わせて再計算
+                // 距離(m) / 80 = 分
+                duration = Math.ceil(route.distance / 80);
+            } else {
+                // 自動車の場合：信号待ちなどを考慮し、OSRMの計算値に少し余裕（1.2倍程度）を持たせる
+                duration = Math.ceil((route.duration / 60) * 1.2);
+            }
+
+            if (routePolyline) map.removeLayer(routePolyline);
+
+            routePolyline = L.geoJSON(route.geometry, {
+                style: { 
+                    color: mode === 'car' ? '#673ab7' : '#28a745',
+                    weight: 6, 
+                    opacity: 0.7 
+                }
+            }).addTo(map);
+
+            const resDiv = document.getElementById('route-result');
+            resDiv.innerHTML = `<strong>${mode === 'car' ? '🚗 自動車' : '🚶 徒歩'}</strong><br>距離: ${distance} km<br>時間: 約 ${duration} 分（※）`;
+            resDiv.style.display = 'block';
+            document.getElementById('route-status').innerText = "※理論上の最短時間、標準的なOSRMエンジンは交差点での停止・加速などの実際のロスを完全には考慮していません。";
+
+        } catch (error) {
+            console.error(error);
+            alert("経路の取得に失敗しました。");
+            clearRoute();
+        }
+    }
+
+    // (ここから下は既存の toggleTextMode(active) や map.on('click', ...) を継続)
+    // 【修正箇所】テキストモード時にダブルズームを無効化
+    function toggleTextMode(active) {
+      isTextMode = active;
+      document.getElementById('text-config-panel').style.display = active ? 'block' : 'none';
+      if(active) {
+        map.getContainer().style.cursor = 'crosshair';
+        map.pm.disableDraw();
+        map.doubleClickZoom.disable(); // ダブルタップズーム無効化
+      } else {
+        map.getContainer().style.cursor = '';
+        map.doubleClickZoom.enable(); // ダブルタップズーム有効化
+      }
+    }
+
+    // ★ここに追加（最適位置）
+    let toolsVisible = false;
+
+    function toggleRightTools() {
+      toolsVisible = !toolsVisible;
+
+      const tools = document.querySelectorAll('.right-tool');
+
+      if (toolsVisible) {
+        // 右側アイコン表示
+        tools.forEach(el => el.style.display = 'block');
+
+        // 図形描写も表示
+        map.pm.addControls({
+          position: 'topright',
+          drawCircleMarker: false,
+          drawText: false,
+          rotateMode: false,
+          drawMarker: true,
+          drawPolyline: true,
+          drawRectangle: true,
+          drawPolygon: true,
+          drawCircle: true,
+          editMode: false,
+          dragMode: true,
+          cutPolygon: false,
+          removalMode: true,
+        });
+
+        map.addControl(customControl);
+
+      } else {
+        // 右側アイコン非表示
+        tools.forEach(el => el.style.display = 'none');
+
+        // 図形描写も消す
+        map.pm.removeControls();
+        map.removeControl(customControl);
+
+        map.pm.disableDraw();
+        toggleTextMode(false);
+      }
+    }
+
+    // --- 地図クリック時の処理（経路探索・テキスト配置・パネル閉じを統合） ---
+    map.on('click', (e) => {
+      // 1. 【追加】経路探索モードがONの場合
+      if (isRouteMode) {
+        if (waypoints.length < 2) {
+          waypoints.push(e.latlng);
+          // クリック地点に一時的なマーカーを設置
+          const m = L.marker(e.latlng).addTo(map);
+          routeMarkers.push(m);
+
+          if (waypoints.length === 1) {
+            document.getElementById('route-status').innerText = "目的地をクリックしてください";
+          } else if (waypoints.length === 2) {
+            calculateRoute(); // 2点揃ったら計算開始
+          }
+        }
+        return; // 経路探索中は、以降のテキスト処理などは行わずに終了する
+      }
+
+      // 2. 【既存】テキスト配置モード（Ｔアイコン）がONの場合
+      if (isTextMode) {
+        const text = document.getElementById('custom-text-input').value || "テキスト";
+        const size = document.getElementById('custom-text-size').value;
+        const family = document.getElementById('custom-text-family').value;
+        
+        const textIcon = L.divIcon({
+          html: `<div style="color:${currentSelectedColor}; font-size:${size}px; font-family:${family}; white-space:nowrap; font-weight:bold; transform: translate(-50%, -50%); text-align: center;">${text}</div>`,
+          className: 'custom-text-marker',
+          iconSize: [0, 0], 
+          iconAnchor: [0, 0] 
+        });
+
+        const marker = L.marker(e.latlng, { icon: textIcon }).addTo(map);
+        
+        // Geomanのドラッグと削除を有効にする設定
+        marker.pm.enable(); 
+      } 
+      // 3. 【既存】どちらのモードでもない場合
+      else {
+        closeControlsPanel();
+      }
+    });
+
+    // 追加：文字入力起動アイコン と カラーパレット（位置調整版）
+    const CustomActionControl = L.Control.extend({
+      options: { position: 'topright' },
+      onAdd: function() {
+        const container = L.DomUtil.create('div', 'leaflet-bar');
+        container.style.marginTop = '1px';
+        
+        // 1. テキスト入力起動ボタン（Ｔ）
+        const textBtn = L.DomUtil.create('a', 'pm-text-btn', container);
+        textBtn.innerHTML = 'Ｔ';
+        textBtn.title = "テキストの追加";
+        textBtn.style.cursor = "pointer";
+        textBtn.style.display = "flex";
+        textBtn.style.alignItems = "center";
+        textBtn.style.justifyContent = "center";
+        textBtn.style.fontWeight = "bold";
+        textBtn.style.fontSize = "16px";
+        textBtn.onclick = (e) => {
+          e.preventDefault();
+          toggleTextMode(!isTextMode);
+        };
+
+        // 2. カラーパレット（最下部に配置）
+        const colorBtnContainer = L.DomUtil.create('div', 'pm-color-picker-container', container);
+        colorBtnContainer.style.marginTop = '0px'; // '5px' などから '0px' に変更
+        const btn = L.DomUtil.create('div', 'pm-color-btn', colorBtnContainer);
+        btn.innerHTML = '🎨';
+        btn.title = "描画色の変更";
+        
+        const input = L.DomUtil.create('input', '', btn);
+        input.type = 'color';
+        input.id = 'pm-color-input';
+        input.value = currentSelectedColor;
+
+        input.oninput = (e) => {
+          currentSelectedColor = e.target.value;
+          map.pm.setPathOptions({
+            color: currentSelectedColor,
+            fillColor: currentSelectedColor,
+            fillOpacity: 0.3
+          });
+          btn.style.borderBottom = `10px solid ${currentSelectedColor}`;
+        };
+
+        // 3. 【追加】画像追加ボタン（🖼️）
+        const imgBtn = L.DomUtil.create('a', 'pm-image-btn', container);
+        imgBtn.innerHTML = '🖼️';
+        imgBtn.title = "画像の追加・編集";
+        imgBtn.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; border-top:0px solid #ccc;";
+        imgBtn.onclick = (e) => {
+           e.preventDefault();
+           toggleImageMode();
+        };
+
+        // 4. 【追加】画像選択ボタン（指アイコン等）
+        const selBtn = L.DomUtil.create('a', 'pm-select-btn', container);
+        selBtn.innerHTML = '👆';
+        selBtn.title = "配置済み画像を選択";
+        selBtn.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; border-top:0px solid #ccc;";
+        selBtn.onclick = (e) => {
+          e.preventDefault();
+          startImageSelectionMode();
+        };
+
+        L.DomEvent.disableClickPropagation(container);
+        return container;
+      }
+    });
+    const customControl = new CustomActionControl();
+    map.addControl(customControl);
+    map.removeControl(customControl); // ★初期は閉じる
+
+    function updateZoomIndicator() {
+        const zoom = map.getZoom();
+        // zoom.toFixed(1) を使うことで、小数点第1位までに制限します
+        document.getElementById('zoom-indicator').innerText = `Zoom: ${zoom.toFixed(1)}`;
+    }
+    updateZoomIndicator();
+    // ズーム中もリアルタイムに数値を変化させたい場合は 'zoom' に、
+    // ズームが止まった時だけで良ければ 'zoomend' のままにします
+    map.on('zoom', updateZoomIndicator);
+    
+    const baseLayers = {
+      "標準": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 21, maxNativeZoom: 19 }),
+      "国土地理院地図": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { maxZoom: 21, maxNativeZoom: 18 }),
+      "航空写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', { maxZoom: 21, maxNativeZoom: 18 })
+    };
+    baseLayers["標準"].addTo(map);
+    const creditText = {
+      "標準": "© OpenStreetMap",
+      "航空写真": "© 国土地理院（航空写真）",
+      "国土地理院地図": "© 国土地理院"
+    };
+
+    // 【旧】 const layerGroups = {}; を削除して、以下に書き換え
+    const boundaryLayers = {};
+    const facilityLayers = {};
+
+    // =====================================================
+    // 📍 住所／緯度経度ジャンプ機能（既存構造完全維持型）
+    // =====================================================
+    let inputMarker = null;
+    let lastJumpInput = ""; // ★ここに追加：入力値を保存する変数
+
+    function jumpToLocation() {
+
+        const input = prompt(
+            "【注意事項】\nオープンストリートマップの検索は、精度が十分でない場合があり、意図しない場所に移動することがあります。あらかじめご了承ください。\n【入力方法】\n住所 施設または 緯度,経度 を入力してください。\n例:\n品川区 〇〇区役所\n35.6094, 139.7303",lastJumpInput
+        );
+
+        if (!input) return;
+
+        lastJumpInput = input;
+
+
+        // 既存マーカー削除
+        if (inputMarker) {
+            map.removeLayer(inputMarker);
+            inputMarker = null;
+        }
+
+        // 緯度経度形式
+        if (input.includes(",")) {
+
+            const parts = input.split(",");
+            const lat = parseFloat(parts[0]);
+            const lng = parseFloat(parts[1]);
+
+            if (isNaN(lat) || isNaN(lng)) {
+                alert("緯度経度の形式が正しくありません");
+                return;
+            }
+
+            map.panTo([lat, lng]); // ← 移動（パン）のみに変更 zoom中止
+
+            inputMarker = L.marker([lat, lng]).addTo(map)
+                .bindPopup(input)
+                .openPopup();
+
+        } else {
+
+        fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&countrycodes=jp&limit=30&accept-language=ja&q=${encodeURIComponent(input)}`
+        )
+        .then(res => res.json())
+        .then(data => {
+
+            if (!data || data.length === 0) {
+                alert("住所が見つかりません");
+                return;
+            }
+
+            // ▼ 候補表示ボックス
+            const resultsDiv = document.createElement("div");
+            resultsDiv.style.position = "fixed";
+            resultsDiv.style.top = "50%";
+            resultsDiv.style.left = "50%";
+            resultsDiv.style.transform = "translate(-50%, -50%)";
+            resultsDiv.style.background = "white";
+            resultsDiv.style.padding = "15px";
+            resultsDiv.style.paddingTop = "35px";   // ★ 重要：×ボタン分の余白
+            resultsDiv.style.zIndex = "5000";
+            resultsDiv.style.maxHeight = "300px";
+            resultsDiv.style.overflowY = "auto";
+            resultsDiv.style.border = "1px solid #ccc";
+            resultsDiv.style.borderRadius = "8px";  // ★ 見た目改善
+
+            // =========================
+            // ★ 右上の × ボタン
+            // =========================
+            const closeX = document.createElement("div");
+            closeX.innerText = "×";
+            closeX.style.position = "absolute";
+            closeX.style.top = "5px";
+            closeX.style.right = "10px";
+            closeX.style.cursor = "pointer";
+            closeX.style.fontSize = "22px";
+            closeX.style.fontWeight = "bold";
+
+            // 見やすく（おすすめ）
+            closeX.style.background = "white";
+            closeX.style.padding = "2px 8px";
+            closeX.style.borderRadius = "4px";
+            closeX.style.boxShadow = "0 1px 3px rgba(0,0,0,0.3)";
+
+            closeX.onclick = () => {
+                document.body.removeChild(resultsDiv);
+            };
+
+            resultsDiv.appendChild(closeX);
+
+            // =========================
+            // ★ 候補リスト
+            // =========================
+            data.forEach(place => {
+
+                const item = document.createElement("div");
+                item.style.padding = "8px";
+                item.style.borderBottom = "1px solid #eee";
+                item.style.cursor = "pointer";
+
+                item.innerText = place.display_name;
+
+                item.onclick = () => {
+
+                    const lat = parseFloat(place.lat);
+                    const lng = parseFloat(place.lon);
+
+                    map.setView([lat, lng]);
+
+                    inputMarker = L.marker([lat, lng]).addTo(map)
+                        .bindPopup(place.display_name)
+                        .openPopup();
+
+                    document.body.removeChild(resultsDiv);
+                };
+
+                resultsDiv.appendChild(item);
+            });
+
+            // =========================
+            // ★ 下の「閉じる」ボタン（既存維持）
+            // =========================
+            const closeBtn = document.createElement("div");
+            closeBtn.innerText = "閉じる";
+            closeBtn.style.marginTop = "10px";
+            closeBtn.style.textAlign = "center";
+            closeBtn.style.cursor = "pointer";
+
+            closeBtn.onclick = () => {
+                document.body.removeChild(resultsDiv);
+            };
+
+            resultsDiv.appendChild(closeBtn);
+
+            document.body.appendChild(resultsDiv);
+        })
+        .catch(() => {
+            alert("検索エラーが発生しました");
+        });
+        
+        }
+    }    
+
+    // 4. データ読み込み関数群
+    function loadChome(idx) {
+      fetch(`geo_0_町丁目境界${idx}.geojson`)
+        .then(res => res.json())
+        .then(data => {
+
+          boundaryLayers[`町丁目境界${idx}`] = L.geoJSON(data, {
+            // renderer: myRenderer,
+
+            style: {
+              color: "red",
+              weight: 1,
+              fillOpacity: 0.03   // ★ 0にしない（スマホ対策）
+            },
+
+            onEachFeature: (f, l) => {
+
+              const content =
+                `<strong>${f.properties["町丁目名"]}</strong><br>` +
+                `人口：${f.properties["JINKO"] ?? "不明"}`;
+
+              const isTouch = 'ontouchstart' in window;
+
+              // ===== PC：マウスオーバー =====
+              if (!isTouch) {
+                l.bindTooltip(content, {
+                  sticky: true,
+                  opacity: 0.9,
+                  direction: "auto"
+                });
+              }
+
+              // ===== スマホ：タップ =====
+              l.bindPopup(content);
+
+              // ===== 視覚フィードバック =====
+              l.on({
+                mouseover: e => {
+                  e.target.setStyle({
+                    weight: 3,
+                    color: "#ff0000",
+                    fillOpacity: 0.15
+                  });
+                },
+
+                mouseout: e => {
+                  e.target.setStyle({
+                    weight: 1,
+                    color: "red",
+                    fillOpacity: 0.03
+                  });
+                },
+
+              });
+            }
+          });
+
+        })
+        .catch(err => console.error(err));
+    }
+
+fetch("geo_47_1.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["病院"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["病院"] || "circle";
+            const color = colorMap["赤"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_2.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["診療所"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["診療所"] || "circle";
+            const color = colorMap["青"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_3.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["歯科"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["歯科"] || "circle";
+            const color = colorMap["黄"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_4.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["助産院"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["助産院"] || "circle";
+            const color = colorMap["赤"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_5.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["薬局"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["薬局"] || "circle";
+            const color = colorMap["緑"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_訪問介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["訪問介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["訪問介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_訪問入浴介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["訪問入浴介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["訪問入浴介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_訪問看護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["訪問看護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["訪問看護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_訪問リハビリテーション.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["訪問リハビリテーション"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["訪問リハビリテーション"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_通所介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["通所介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["通所介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_通所介護（療養通所介護）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["通所介護（療養通所介護）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["通所介護（療養通所介護）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_通所リハビリテーション.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["通所リハビリテーション"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["通所リハビリテーション"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_福祉用具貸与.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["福祉用具貸与"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["福祉用具貸与"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_短期入所生活介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["短期入所生活介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["短期入所生活介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_短期入所療養介護（介護老人保健施設）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["短期入所療養介護（介護老人保健施設）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["短期入所療養介護（介護老人保健施設）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_短期入所療養介護（療養病床を有する病院等）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["短期入所療養介護（療養病床を有する病院等）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["短期入所療養介護（療養病床を有する病院等）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_短期入所療養介護（介護医療院）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["短期入所療養介護（介護医療院）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["短期入所療養介護（介護医療院）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_認知症対応型共同生活介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["認知症対応型共同生活介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["認知症対応型共同生活介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_特定施設入居者生活介護（有料老人ホーム）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["特定施設入居者生活介護（有料老人ホーム）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["特定施設入居者生活介護（有料老人ホーム）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_特定施設入居者生活介護（軽費老人ホーム）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["特定施設入居者生活介護（軽費老人ホーム）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["特定施設入居者生活介護（軽費老人ホーム）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_特定施設入居者生活介護（サービス付き高齢者向け住宅）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["特定施設入居者生活介護（サービス付き高齢者向け住宅）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["特定施設入居者生活介護（サービス付き高齢者向け住宅）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_特定施設入居者生活介護（有料老人ホーム・外部サービス利用型）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["特定施設入居者生活介護（有料老人ホーム・外部サービス利用型）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["特定施設入居者生活介護（有料老人ホーム・外部サービス利用型）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_特定施設入居者生活介護（軽費老人ホーム・外部サービス利用型）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["特定施設入居者生活介護（軽費老人ホーム・外部サービス利用型）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["特定施設入居者生活介護（軽費老人ホーム・外部サービス利用型）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_特定施設入居者生活介護（サービス付き高齢者向け住宅・外部サービス利用型）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["特定施設入居者生活介護（サービス付き高齢者向け住宅・外部サービス利用型）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["特定施設入居者生活介護（サービス付き高齢者向け住宅・外部サービス利用型）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_地域密着型特定施設入居者生活介護（有料老人ホーム）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["地域密着型特定施設入居者生活介護（有料老人ホーム）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["地域密着型特定施設入居者生活介護（有料老人ホーム）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_地域密着型特定施設入居者生活介護（軽費老人ホーム）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["地域密着型特定施設入居者生活介護（軽費老人ホーム）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["地域密着型特定施設入居者生活介護（軽費老人ホーム）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_地域密着型特定施設入居者生活介護（サービス付き高齢者向け住宅）.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["地域密着型特定施設入居者生活介護（サービス付き高齢者向け住宅）"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["地域密着型特定施設入居者生活介護（サービス付き高齢者向け住宅）"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_特定福祉用具販売.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["特定福祉用具販売"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["特定福祉用具販売"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_居宅介護支援.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["居宅介護支援"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["居宅介護支援"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_介護老人福祉施設.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["介護老人福祉施設"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["介護老人福祉施設"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_介護老人保健施設.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["介護老人保健施設"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["介護老人保健施設"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_介護療養型医療施設.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["介護療養型医療施設"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["介護療養型医療施設"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_地域密着型介護老人福祉施設入所者生活介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["地域密着型介護老人福祉施設入所者生活介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["地域密着型介護老人福祉施設入所者生活介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_介護医療院.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["介護医療院"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["介護医療院"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_夜間対応型訪問介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["夜間対応型訪問介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["夜間対応型訪問介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_認知症対応型通所介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["認知症対応型通所介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["認知症対応型通所介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_小規模多機能型居宅介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["小規模多機能型居宅介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["小規模多機能型居宅介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_定期巡回・随時対応型訪問介護看護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["定期巡回・随時対応型訪問介護看護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["定期巡回・随時対応型訪問介護看護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_看護小規模多機能型居宅介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["看護小規模多機能型居宅介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["看護小規模多機能型居宅介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+fetch("geo_47_地域密着型通所介護.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["地域密着型通所介護"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["地域密着型通所介護"] || "circle";
+            const color = colorMap["茶"] || "brown";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer,
+                shape: shape,
+                radius: markerRadius,
+                fillColor: color,
+                color: "white",
+                weight: 1,
+                fillOpacity: 1
+            }).bindPopup(
+                `<strong>${f.properties["内容"] || "-"}</strong><br>
+                 ${f.properties["url2"] ? `<a href='${f.properties["url2"]}' target='_blank'>ホームページ</a>` : ""}
+                 ${f.properties["url"] ? ` | <a href='${f.properties["url"]}' target='_blank'>医療・介護ネット</a>` : ""}`,
+                { maxWidth: 260 }
+            );
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => {});
+
+    // --- ★修正：UIパネル上の操作が地図（ズーム等）に伝わらないように設定 ---
+    ['controls', 'search-panel', 'route-panel', 'text-config-panel', 'info-panel'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            L.DomEvent.disableClickPropagation(el);
+            L.DomEvent.disableScrollPropagation(el);
+        }
+    });
+
+    for(let i=1; i<=5; i++) { loadChome(i.toString().padStart(2, '0')); }
+
+    // --- 新コード：ここから差し替え ---
+    // 1. 境界線チェックボックスの動作
+    document.querySelectorAll('.boundary-toggle').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const g = boundaryLayers[this.value]; // 分離したオブジェクトを参照
+            if (!g) return;
+            this.checked ? g.addTo(map) : map.removeLayer(g);
+        });
+    });
+
+    // 2. 施設種類チェックボックスの動作
+    // 3320行目付近：施設種類の一括操作
+    document.querySelectorAll('.facility-toggle').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const g = facilityLayers[this.value];
+            if (!g) return;
+            if (this.checked) {
+                g.addTo(map);
+                // requestRedrawではなく、Leafletの描画サイクルに乗せる
+                setTimeout(() => {
+                    if (myRenderer && myRenderer._requestRedraw) {
+                        myRenderer._requestRedraw();
+                    }
+                }, 10);
+            } else {
+                map.removeLayer(g);
+            }
+        });
+    });
+
+    document.getElementById('search-input').oninput = function(e) {
+        const val = e.target.value.toLowerCase().trim();
+        const resDiv = document.getElementById('search-results');
+        resDiv.innerHTML = '';
+        if(!val) return;
+        const keywords = val.split(/[\s　]+/);
+        // 施設レイヤーのみをループ対象にする
+        for (let label in facilityLayers) {
+            if (!facilityLayers[label]) continue;
+            facilityLayers[label].eachLayer(l => {
+                const name = (l.feature.properties["内容"] || "").toLowerCase();
+                if(keywords.every(kw => name.includes(kw))) {
+                    const item = document.createElement('div');
+                    item.className = "search-item";
+                    item.style = "padding:8px; border-bottom:1px solid #eee; font-size:13px;";
+                    item.innerText = l.feature.properties["内容"];
+                    item.onclick = () => {
+                        map.pm.disableDraw();   // 描画を強制終了
+                        toggleTextMode(false);  // テキストモードも終了
+                        document.getElementById('search-panel').style.display = 'none';
+                        if (!map.hasLayer(l)) { l.addTo(map); }
+                        document.getElementById('search-input').blur();
+                        map.panTo(l.getLatLng(), { animate: true });
+                        setTimeout(() => { l.openPopup(); }, 250);
+                    };
+                    resDiv.appendChild(item);
+                }
+            });
+        }
+    };
+
+    // 追加：検索結果をすべて地図に表示する機能
+    document.getElementById('show-all-results-btn').onclick = function() {
+        const val = document.getElementById('search-input').value.toLowerCase().trim();
+        if(!val) return;
+        
+        const keywords = val.split(/[\s　]+/);
+        const bounds = []; 
+
+        // 修正ポイント1: layerGroups ではなく facilityLayers をループ回す
+        for (let label in facilityLayers) {
+            if (!facilityLayers[label]) continue;
+
+            // 修正ポイント2: facilityLayers の各レイヤーを処理する
+            facilityLayers[label].eachLayer(l => {
+                const name = (l.feature.properties["内容"] || "").toLowerCase();
+                if(keywords.every(kw => name.includes(kw))) {
+                    // 修正ポイント3: 見つかった施設のチェックボックスも連動してONにする（推奨）
+                    const cb = document.querySelector(`.facility-toggle[value="${label}"]`);
+                    if (cb && !cb.checked) {
+                        cb.checked = true;
+                    }
+
+                    if (!map.hasLayer(l)) { 
+                        l.addTo(map); 
+                    }
+                    bounds.push(l.getLatLng());
+                }
+            });
+        }
+
+        if (bounds.length > 0) {
+            const latLngBounds = L.latLngBounds(bounds);
+            const center = latLngBounds.getCenter();
+            map.panTo(center);
+            document.getElementById('search-panel').style.display = 'none';
+        } else {
+            alert("該当する施設が見つかりません。");
+        }
+    };
+
+    function togglePanel(id) {
+        const p = document.getElementById(id);
+        const isVisible = p.style.display === 'block';
+        ['controls', 'search-panel', 'info-panel'].forEach(i => document.getElementById(i).style.display = 'none');
+        if(!isVisible) p.style.display = 'block';
+    }
+
+    // --- 新コード：4つのボタン用に書き換え ---
+    // 境界線の一括操作
+    // 1. 境界線チェックボックスの動作
+    document.querySelectorAll('.boundary-toggle').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const g = boundaryLayers[this.value]; // 境界線用変数を参照
+            if (!g) return;
+            if (this.checked) { g.addTo(map); } 
+            else { map.removeLayer(g); }
+        });
+    });
+    document.getElementById('deselectBoundariesBtn').onclick = () => {
+        document.querySelectorAll('.boundary-toggle').forEach(cb => { cb.checked = false; cb.dispatchEvent(new Event('change')); });
+    };
+
+    // 施設種類の一括操作
+    // 2. 施設種類チェックボックスの動作
+        document.querySelectorAll('.facility-toggle').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const g = facilityLayers[this.value];
+            if (!g) return;
+            if (this.checked) {
+                g.addTo(map);
+                // requestRedrawではなく、Leafletの描画サイクルに乗せる
+                setTimeout(() => {
+                    if (myRenderer && myRenderer._requestRedraw) {
+                        myRenderer._requestRedraw();
+                    }
+                }, 10);
+            } else {
+                map.removeLayer(g);
+            }
+        });
+    });
+
+    document.getElementById('deselectFacilitiesBtn').onclick = () => {
+        document.querySelectorAll('.facility-toggle').forEach(cb => { cb.checked = false; cb.dispatchEvent(new Event('change')); });
+    };
+
+    document.querySelectorAll('input[name="baseLayer"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        for (let key in baseLayers) { map.removeLayer(baseLayers[key]); }
+        baseLayers[this.value].addTo(map);
+        document.getElementById("credit-title").innerText = creditText[this.value] || "";
+      });
+    });
+
+    function closeControlsPanel() {
+      const controls = document.getElementById('controls');
+      if (controls && controls.style.display === 'block') { controls.style.display = 'none'; }
+    }
+
+    // 追加：再起動の確認ダイアログ
+    function confirmReload() {
+        if (window.confirm("初期化しますか？")) {
+            location.reload();
+        }
+    }
+
+    // 境界線の全て選択
+    document.getElementById('selectBoundariesBtn').onclick = () => {
+        document.querySelectorAll('.boundary-toggle').forEach(cb => { 
+            cb.checked = true; 
+            cb.dispatchEvent(new Event('change')); 
+        });
+    };
+
+    // 施設種類の全て選択
+    document.getElementById('selectFacilitiesBtn').onclick = () => {
+        document.querySelectorAll('.facility-toggle').forEach(cb => { 
+            cb.checked = true; 
+            cb.dispatchEvent(new Event('change')); 
+        });
+    };    
+
+    // === ここから【追加】：画像操作ロジック本体 ===
+    let currentImgMarker = null;
+
+    // GitHubに登録した画像URLリスト (適宜書き換えてください)
+    const githubImageUrls = [
+        "https://hmc48.github.io/23269.png",
+        "https://hmc48.github.io/23274.png",
+        "https://hmc48.github.io/279.png",
+        "https://hmc48.github.io/clinic.png",
+        "https://hmc48.github.io/dental-clinic.png",
+        "https://hmc48.github.io/pharmacy-10371.png",
+        "https://hmc48.github.io/roujinho-mu_c.png",
+        "https://hmc48.github.io/iryou_jujisya.png"
+    ];
+
+     // 初期化：パネル内のGitHub画像リストを生成
+     const imgListContainer = document.getElementById('github-images');
+     if (imgListContainer) {
+        githubImageUrls.forEach(url => {
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = 'img-sample';
+            img.onclick = () => addImageToMap(url);
+            imgListContainer.appendChild(img);
+        });
+    }
+
+    // ファイル選択ボタンのイベント
+    document.getElementById('image-file-input').onchange = (e) => {
+        const file = e.target.files[0];
+         if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => addImageToMap(event.target.result);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    function toggleImageMode() {
+        const panel = document.getElementById('image-config-panel');
+        const isVisible = panel.style.display === 'block';
+        panel.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) {
+            // 画像モードを開くときは他の描画モードをOFFにする
+            if(map.pm) map.pm.disableDraw();
+        }
+    }
+
+    function addImageToMap(url) {
+        // 1. 地図コンテナのサイズを取得
+        const container = map.getContainer();
+        const width = container.offsetWidth;
+
+        // 2. 画面右端から250px、上から100pxの位置を指定
+        // ここでカッコの閉じ忘れがないか注意
+        const targetPoint = L.point(width - 250, 100); 
+
+        // 3. ピクセル座標を緯度経度に変換
+        const targetLatLng = map.containerPointToLayerPoint(targetPoint);
+        const coords = map.layerPointToLatLng(targetLatLng);
+
+        const icon = L.divIcon({
+            html: `<img src="${url}" style="width:100px; transform: rotate(0deg) scale(1.0);" class="map-added-image">`,
+            className: 'image-marker-container',
+            iconSize: [100, 100],
+            iconAnchor: [50, 50]
+        });
+
+        // 4. マーカーを作成（coordsを使用）
+        const marker = L.marker(coords, { draggable: true }).addTo(map);
+        marker.setIcon(icon);
+        setupImageEdit(marker);
+    }
+
+    function setupImageEdit(marker) {
+        if (currentImgMarker && currentImgMarker !== marker) finalizeImage(currentImgMarker);
+        currentImgMarker = marker;
+        const imgElement = marker.getElement().querySelector('img');
+        imgElement.classList.add('editing-image');
+        marker.dragging.enable();
+
+        // パネルを表示し、スライダー値を現在の画像に合わせる（簡易実装）
+        document.getElementById('image-config-panel').style.display = 'block';
+
+        const update = () => {
+            const r = document.getElementById('img-rotate').value;
+            const s = document.getElementById('img-scale').value;
+            imgElement.style.transform = `rotate(${r}deg) scale(${s})`;
+            document.getElementById('rot-val').innerText = r;
+            document.getElementById('scale-val').innerText = s;
+        };
+
+        document.getElementById('img-rotate').oninput = update;
+        document.getElementById('img-scale').oninput = update;
+        document.getElementById('btn-img-confirm').onclick = () => finalizeImage(marker);
+        document.getElementById('btn-img-delete').onclick = () => {
+            map.removeLayer(marker);
+            currentImgMarker = null;
+        };
+    }
+
+    function finalizeImage(marker) {
+        const img = marker.getElement().querySelector('img');
+        if (img) img.classList.remove('editing-image');
+        marker.dragging.disable();
+        currentImgMarker = null;
+    }
+
+    function startImageSelectionMode() {
+        alert("地図上の画像をクリックして編集を開始してください");
+        map.eachLayer(layer => {
+            if (layer instanceof L.Marker && layer.getElement()?.querySelector('.map-added-image')) {
+                layer.off('click').on('click', (e) => {
+                    L.DomEvent.stopPropagation(e);
+                    setupImageEdit(layer);
+                });
+            }
+        });
+    }
+
+    function closeImagePanel() {
+        if (currentImgMarker) finalizeImage(currentImgMarker);
+        document.getElementById('image-config-panel').style.display = 'none';
+    }
+    // === ここまで【追加】===
+
+    // --- 既存コード (scriptタグの終わり) ---
+
+  </script>
+</body>
+</html>
