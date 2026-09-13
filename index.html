@@ -31,6 +31,48 @@ body { margin:0; padding:0; overflow:hidden; font-family: sans-serif; }
   background: rgba(255, 255, 255, 0.8); padding: 5px 10px;
   border: 1px solid #ccc; border-radius: 4px; font-weight: bold; font-size: 9px; pointer-events: none;
 }
+
+/* ★ 追加：左上（+-ボタンの下）に配置するハザード凡例スタイル */
+#hazard-legend {
+  display: none;
+  position: fixed;
+  top: 80px;
+  left: 10px;
+  z-index: 3000;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  font-size: 11px;
+  line-height: 1.4;
+  max-width: 220px;
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+}
+
+/* ★追加：ハザード凡例の右上に表示する閉じる× */
+.hazard-legend-close {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  line-height: 1;
+  z-index: 10;
+  padding: 2px 4px;
+  user-select: none;
+}
+
+.hazard-legend-close:hover {
+  color: #000;
+}
+.legend-title { font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid #ddd; padding-bottom: 2px; }
+.legend-item { display: flex; align-items: center; margin-top: 3px; }
+.legend-color { width: 14px; height: 14px; margin-right: 6px; border: 1px solid #aaa; flex-shrink: 0; }
+
 /* ボタンサイズ */
 .circle-btn {
   width:36px; height:36px; border-radius:50%; text-align:center; line-height:36px;
@@ -44,7 +86,7 @@ body { margin:0; padding:0; overflow:hidden; font-family: sans-serif; }
 
 /* ★最初のホーム */
 #toggle-tools-btn {
-  top: 15px;   /* ←位置はあとで微調整OK */
+  top: 15px;
   right: 15px;
   background:#fd63db;
   color:white;
@@ -54,7 +96,6 @@ body { margin:0; padding:0; overflow:hidden; font-family: sans-serif; }
 #search-btn { top:90px; right:15px; background:#28a745; color:white; }
 #info-btn { top:130px; right:15px; background:#ff69b4; color:white; }
 #jump-btn { top:170px; right:15px; background:#ff9800; color:white; }
-/* 追加：経路探索ボタンとパネル */
 #route-btn { top:210px; right:15px; background:#673ab7; color:white; }
 #reload-btn { top:250px; right:15px; background:#6c757d; color:white; }
 #route-panel {
@@ -77,7 +118,6 @@ body { margin:0; padding:0; overflow:hidden; font-family: sans-serif; }
 .layer-item { margin-bottom: 8px; font-size: 14px; display: flex; align-items: center; }
 input[type="checkbox"], input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
 
-/* 追加：カラーパレット用ボタンのスタイル */
 .pm-color-picker-container {
   margin-top: 5px !important;
   border-top: 1px solid #ccc;
@@ -93,9 +133,8 @@ input[type="checkbox"], input[type="radio"] { margin-right: 10px; transform: sca
   position: absolute; opacity: 0; width: 34px; height: 34px; cursor: pointer;
 }
 
-/* 追加：テキスト設定パネルのスタイル */
 #text-config-panel {
-  display:none; position:fixed; right:70px; top:40px; /* 右側に出るように変更 */
+  display:none; position:fixed; right:70px; top:40px;
   background:white; padding:10px; border-radius:8px; z-index:4000;
   box-shadow:0 2px 10px rgba(0,0,0,0.2); width: 180px;
 }
@@ -103,7 +142,7 @@ input[type="checkbox"], input[type="radio"] { margin-right: 10px; transform: sca
 .config-item { margin-bottom: 8px; font-size: 12px; }
 .config-item label { display: block; font-weight: bold; margin-bottom: 3px; }
 .config-item input, .config-item select {
-   font-size: 16px;   /* ★これを追加（最重要） */
+   font-size: 16px;
    width: 100%;
    padding: 5px;
    box-sizing: border-box;
@@ -114,35 +153,36 @@ input[type="checkbox"], input[type="radio"] { margin-right: 10px; transform: sca
 .btn-container { display: flex; gap: 5px; margin-bottom: 5px; }
 button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
 .search-item:hover { background:#f0f0f0; cursor:pointer; }
-    /* 図形描写追加 */
-    .leaflet-top.leaflet-right {
-      margin-top: 275px;
-    }
+.leaflet-top.leaflet-right {
+  margin-top: 275px;
+}
+.leaflet-overlay-pane {
+  z-index: 400 !important;
+}
 
-    /* 図形描画レイヤーをマーカーより下に配置 */
-    .leaflet-overlay-pane {
-      z-index: 400 !important;
-    }
-
-    /* === ここから追加 === */
-    #image-config-panel {
-      display:none; position:fixed; right:70px; top:140px; 
-      background:white; padding:10px; border-radius:8px; z-index:4000;
-      box-shadow:0 2px 10px rgba(0,0,0,0.2); width: 200px;
-    }
-    .img-container { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-    .img-sample { width: 40px; height: 40px; cursor: pointer; border: 1px solid #ccc; object-fit: cover; }
-    .img-sample:hover { border-color: #fd63db; }
-    .editing-image { outline: 2px dashed #ff4500; cursor: move; }
-    /* === ここまで追加 === */
-
-
-  </style>
-
+#image-config-panel {
+  display:none; position:fixed; right:70px; top:140px; 
+  background:white; padding:10px; border-radius:8px; z-index:4000;
+  box-shadow:0 2px 10px rgba(0,0,0,0.2); width: 200px;
+}
+.img-container { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.img-sample { width: 40px; height: 40px; cursor: pointer; border: 1px solid #ccc; object-fit: cover; }
+.img-sample:hover { border-color: #fd63db; }
+.editing-image { outline: 2px dashed #ff4500; cursor: move; }
+</style>
 </head>
 <body>
   <div id="map-title-bar"><span id="main-title">沖縄県版</span> <span id="credit-title">© OpenStreetMap</span></div>
   <div id="zoom-indicator">Zoom: --</div>
+
+  <!-- ★ 追加：左上ハザード凡例コンテナ -->
+  <div id="hazard-legend">
+    <div class="hazard-legend-close"
+         onclick="closeHazardLegend()"
+         title="凡例を閉じる">×</div>
+    <div class="legend-title">🔰 ハザード凡例</div>
+    <div id="hazard-legend-content"></div>
+  </div>
 
   <div id="text-config-panel">
     <div class="config-item">
@@ -165,27 +205,27 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     <button onclick="toggleTextMode(false)" style="width:100%; padding:5px; cursor:pointer;">閉じる</button>
   </div>
 
-    <div id="image-config-panel">
-      <div class="section-title">画像を選択</div>
-      <div class="img-container" id="github-images"></div>
-      <input type="file" id="image-file-input" accept="image/*" style="font-size: 11px; width: 100%;">
-      <hr>
-      <div class="section-title">変形操作</div>
-      <div class="config-item">
-        <label>回転 (<span id="rot-val">0</span>°)</label>
-        <input type="range" id="img-rotate" min="0" max="360" value="0">
-      </div>
-      <div class="config-item">
-        <label>拡大縮小 (<span id="scale-val">1.0</span>倍)</label>
-        <input type="range" id="img-scale" min="0.1" max="5.0" step="0.1" value="1.0">
-      </div>
-      <button id="btn-img-confirm" style="width:100%; padding:8px; background:#28a745; color:white; border:none; margin-top:5px; cursor:pointer;">確定</button>
-      <button id="btn-img-delete" style="width:100%; padding:8px; background:#dc3545; color:white; border:none; margin-top:5px; cursor:pointer;">削除</button>
-      <button onclick="closeImagePanel()" style="width:100%; padding:5px; margin-top:5px; cursor:pointer;">閉じる</button>
+  <div id="image-config-panel">
+    <div class="section-title">画像を選択</div>
+    <div class="img-container" id="github-images"></div>
+    <input type="file" id="image-file-input" accept="image/*" style="font-size: 11px; width: 100%;">
+    <hr>
+    <div class="section-title">変形操作</div>
+    <div class="config-item">
+      <label>回転 (<span id="rot-val">0</span>°)</label>
+      <input type="range" id="img-rotate" min="0" max="360" value="0">
     </div>
+    <div class="config-item">
+      <label>拡大縮小 (<span id="scale-val">1.0</span>倍)</label>
+      <input type="range" id="img-scale" min="0.1" max="5.0" step="0.1" value="1.0">
+    </div>
+    <button id="btn-img-confirm" style="width:100%; padding:8px; background:#28a745; color:white; border:none; margin-top:5px; cursor:pointer;">確定</button>
+    <button id="btn-img-delete" style="width:100%; padding:8px; background:#dc3545; color:white; border:none; margin-top:5px; cursor:pointer;">削除</button>
+    <button onclick="closeImagePanel()" style="width:100%; padding:5px; margin-top:5px; cursor:pointer;">閉じる</button>
+  </div>
 
-  <div id="toggle-tools-btn" class="circle-btn" onclick="toggleRightTools()">🏠</div>
-  <div id="control-btn" class="circle-btn right-tool" onclick="togglePanel('controls')">🛠️</div>
+  <div id="toggle-tools-btn" class="circle-btn" title="ホーム" onclick="toggleRightTools()">🏠</div>
+  <div id="control-btn" class="circle-btn right-tool" title="設定、地図種類変更等" onclick="togglePanel('controls')">🛠️</div>
   <div id="controls">
     <span class="close-x" onclick="togglePanel('controls')">×</span>
     <div class="section-title">境界線の一括操作</div>
@@ -202,8 +242,18 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     <label class="layer-item"><input type="radio" name="baseLayer" value="標準" checked> オープンストリートマップ</label>
     <label class="layer-item"><input type="radio" name="baseLayer" value="航空写真"> 航空写真(国土地理院)</label>
     <label class="layer-item"><input type="radio" name="baseLayer" value="国土地理院地図"> 国土地理院地図</label>
-    <div class="section-title">境界線・施設種類</div>
+    <div class="section-title">災害ハザード</div>
+    <label class="layer-item"><input type="checkbox" class="hazard-toggle" value="洪水（想定最大規模）"> 洪水（想定最大規模）</label>
+    <label class="layer-item"><input type="checkbox" class="hazard-toggle" value="土石流警戒区域"> 土石流警戒区域</label>
+    <label class="layer-item"><input type="checkbox" class="hazard-toggle" value="急傾斜地の崩壊"> 急傾斜地の崩壊</label>
+    <label class="layer-item"><input type="checkbox" class="hazard-toggle" value="地すべり"> 地すべり</label>
+    <label class="layer-item"><input type="checkbox" class="hazard-toggle" value="高潮浸水想定区域"> 高潮浸水想定区域</label>
+    <label class="layer-item"><input type="checkbox" class="hazard-toggle" value="津波浸水想定"> 津波浸水想定</label>
+    <div style="font-size:10px;color:#777;margin:4px 0 8px;">
+      ※国土地理院・ハザードマップポータルサイトの配信データ
+    </div>
 
+    <div class="section-title">境界線・施設種類</div>
 <div class="section-title" style="margin-top:5px; color:#555; font-size:11px;">▼ 行政境界（町丁目）</div>
     <label class="layer-item"><input type="checkbox" class="boundary-toggle" value="町丁目境界01"> 北部医療圏</label>
     <label class="layer-item"><input type="checkbox" class="boundary-toggle" value="町丁目境界02"> 中部医療圏</label>
@@ -253,17 +303,17 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型通所介護"> 地域密着型通所介護</label>
 
   </div>
-  <div id="search-btn" class="circle-btn right-tool" onclick="togglePanel('search-panel')">🔍</div>
+  <div id="search-btn" class="circle-btn right-tool" title="医院等検索" onclick="togglePanel('search-panel')">🔍</div>
   <div id="search-panel">
     <input type="text" id="search-input" placeholder="and検索（例：内科 五反田）" style="width:100%; padding:10px; box-sizing:border-box; font-size:16px;">
     <button id="show-all-results-btn" style="width:100%; margin-top:10px; padding:8px; cursor:pointer; background:#28a745; color:white; border:none; border-radius:4px; font-weight:bold;">検索結果をすべて表示</button>
     <div id="search-results" style="max-height:200px; overflow-y:auto; margin-top:10px;"></div>
   </div>
   <div id="info-btn" class="circle-btn right-tool" onclick="togglePanel('info-panel')">i</div>
-  <div id="jump-btn" class="circle-btn right-tool" onclick="jumpToLocation()">📍</div>
+  <div id="jump-btn" class="circle-btn right-tool" title="住所検索" onclick="jumpToLocation()">📍</div>
   
-  <div id="route-btn" class="circle-btn right-tool" onclick="toggleRouteMode()">🚗</div>
-  <div id="reload-btn" class="circle-btn right-tool" onclick="confirmReload()">↩️</div>
+  <div id="route-btn" class="circle-btn right-tool" title="経路検索" onclick="toggleRouteMode()">🚗</div>
+  <div id="reload-btn" class="circle-btn right-tool" title="初期化" onclick="confirmReload()">↩️</div>
   
   <div id="route-panel">
     <span class="close-x" onclick="toggleRouteMode()">×</span>
@@ -279,7 +329,7 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
   </div>
 
   <div id="info-panel" onclick="this.style.display='none'">
-    <strong>医療・介護施設マップ　　　　★閉じる★</strong><br>
+    <strong>医療・介護施設マップ    ★閉じる★</strong><br>
     <span style="color:red;">★</span>病院
     <span style="color:blue;">&hearts;</span>診療所
     <span style="color:yellow;">♣</span>歯科
@@ -298,115 +348,23 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     &nbsp;&nbsp;&nbsp;
     <a href="https://www.mhlw.go.jp/chosakuken/index.html" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">同利用規約</a><br>
     e-Stat国勢調査2020年<br>
+    【災害ハザード】<br>
+    洪水（想定最大規模）、土石流、急傾斜地の崩壊、地すべり、高潮、津波<br>
+    出典：ハザードマップポータルサイト（国土地理院・国土交通省）<br>
+    ※最新かつ詳細な情報は、各自治体のハザードマップもご確認ください。<br>
     【機能】<br>
-    <span style="
-        background-color: #fd63db; /* 背景をピンク色に */
-        border-radius: 50%;       /* 角を丸くして円に */
-        padding: 10px;            /* ピンと円の余白 */
-        display: inline-flex;     /* 中身（🏠）を中央寄せ */
-        align-items: center;
-        justify-content: center;
-        width: 5px;              /* 円の幅 */
-        height: 5px;             /* 円の高さ */
-    ">
-        🏠
-    </span>
-    ホーム<br>
-    <span style="
-        background-color: blue; /* 背景を青色に */
-        border-radius: 50%;       /* 角を丸くして円に */
-        padding: 10px;            /* ピンと円の余白 */
-        display: inline-flex;     /* 中身（🛠️）を中央寄せ */
-        align-items: center;
-        justify-content: center;
-        width: 5px;              /* 円の幅 */
-        height: 5px;             /* 円の高さ */
-    ">
-        🛠️
-    </span>
-    設定 地図種類変更、医療圏境界線表示<br>
-    　　施設選択（各ページへリンク）<br>
-    　　人口表示（境界線初期表示時）<br>
-    <span style="
-        background-color: green; /* 背景を緑色に */
-        border-radius: 50%;       /* 角を丸くして円に */
-        padding: 10px;            /* ピンと円の余白 */
-        display: inline-flex;     /* 中身（🔍）を中央寄せ */
-        align-items: center;
-        justify-content: center;
-        width: 5px;              /* 円の幅 */
-        height: 5px;             /* 円の高さ */
-    ">
-        🔍
-    </span>
-    検索機能(and検索)<br>
-    　　and検索の例:内科 秋葉原　診療所<br>
-    　　人口表示（境界線表示時）<br>
-    <span style="
-        background-color: orange; /* 背景をオレンジ色に */
-        border-radius: 50%;       /* 角を丸くして円に */
-        padding: 10px;            /* ピンと円の余白 */
-        display: inline-flex;     /* 中身（📍）を中央寄せ */
-        align-items: center;
-        justify-content: center;
-        width: 5px;              /* 円の幅 */
-        height: 5px;             /* 円の高さ */
-    ">
-        📍
-    </span>
-    住所検索(and検索)<br>
-    <span style="
-        background-color: blue; /* 背景を青色に */
-        border-radius: 50%;       /* 角を丸くして円に */
-        padding: 10px;            /* ピンと円の余白 */
-        display: inline-flex;     /* 中身（🚗）を中央寄せ */
-        align-items: center;
-        justify-content: center;
-        width: 5px;              /* 円の幅 */
-        height: 5px;             /* 円の高さ */
-    ">
-        🚗
-    </span>
-    経路探索（自動車、徒歩）<br>
-    <span style="
-        background-color: gray; /* 背景をグレーに */
-        border-radius: 50%;       /* 角を丸くして円に */
-        padding: 10px;            /* ピンと円の余白 */
-        display: inline-flex;     /* 中身（↩️）を中央寄せ */
-        align-items: center;
-        justify-content: center;
-        width: 5px;              /* 円の幅 */
-        height: 5px;             /* 円の高さ */
-    ">
-        ↩️
-    </span>
-    初期化<br>
-    <span style="
-        background-color: gray; /* 背景をグレー色に */
-        border-radius: 50%;       /* 角を丸くして円に */
-        padding: 10px;            /* ピンと円の余白 */
-        display: inline-flex;     /* 中身（✏️）を中央寄せ */
-        align-items: center;
-        justify-content: center;
-        width: 5px;              /* 円の幅 */
-        height: 5px;             /* 円の高さ */
-    ">
-        ✏️
-    </span>
-    線、四角形、多角形、円の描写、テキスト入力<br>
-    <span style="
-        background-color: yellow; /* 背景を黄色に */
-        border-radius: 50%;       /* 角を丸くして円に */
-        padding: 10px;            /* ピンと円の余白 */
-        display: inline-flex;     /* 中身（🖼️）を中央寄せ */
-        align-items: center;
-        justify-content: center;
-        width: 5px;              /* 円の幅 */
-        height: 5px;             /* 円の高さ */
-    ">
-        🖼️
-    </span>
-    任意の画像、イラストの挿入<br>
+    <span style="background-color: #fd63db; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🏠</span> ホーム<br>
+    <span style="background-color: blue; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🛠️</span> 設定 地図種類変更、医療圏境界線表示<br>
+      施設選択（各ページへリンク）<br>
+      人口表示（境界線初期表示時）<br>
+    <span style="background-color: green; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🔍</span> 検索機能(and検索)<br>
+      and検索の例:内科 秋葉原 診療所<br>
+      人口表示（境界線表示時）<br>
+    <span style="background-color: orange; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">📍</span> 住所検索(and検索)<br>
+    <span style="background-color: blue; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🚗</span> 経路探索（自動車、徒歩）<br>
+    <span style="background-color: gray; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">↩️</span> 初期化<br>
+    <span style="background-color: gray; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">✏️</span> 線、四角形、多角形、円の描写、テキスト入力<br>
+    <span style="background-color: yellow; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🖼️</span> 任意の画像、イラストの挿入<br>
     【利用規約・ご意見・ご感想・お問い合わせ】<br>
     他都道府県は下記サイトへ<br>
     本ツールは以下のサイトで作成しています。<br>
@@ -464,73 +422,51 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
         }
     });
 
-    // マップの初期化
     const map = L.map('map', {
-      center: [26.212600663693596, 127.68061259357493], // 緯度経度
+      center: [26.212600663693596, 127.68061259357493],
       zoom: 15,
-      preferCanvas: true, // これを追加
-      zoomSnap: 0.1,  // ズーム後の値を0.1単位で固定する
-      zoomDelta: 0.1, // ボタンやキーボード操作での変化量を0.1にする
-      wheelPxPerZoomLevel: 120 // ホイール操作の感度（数値が大きいほどゆっくり）
+      preferCanvas: true,
+      zoomSnap: 0.1,
+      zoomDelta: 0.1,
+      wheelPxPerZoomLevel: 120
     });
 
-    // ★ここに追加：境界線専用の階層（ペイン）を作成
     map.createPane('boundaryPane');
-    map.getPane('boundaryPane').style.zIndex = 350; // 標準のオーバーレイ(400)より下に配置
-    map.getPane('boundaryPane').style.pointerEvents = 'none'; // 地図上のクリックを邪魔しない設定
+    map.getPane('boundaryPane').style.zIndex = 350;
+    map.getPane('boundaryPane').style.pointerEvents = 'none';
 
-    // --- Leaflet-geoman 初期化 ---
     map.pm.setLang('ja');
-    
-    // オプションは無料版で有効なものだけに整理
-    map.pm.setGlobalOptions({
-      snappable: true,
-      cursorMarker: true
-    });
+    map.pm.setGlobalOptions({ snappable: true, cursorMarker: true });
 
-    // --- 【修正箇所】手動で半径を表示するロジックを追加 ---
     map.on('pm:drawstart', ({ workingLayer }) => {
-      // 図形描画が始まったらテキストモードのパネルを閉じる
       toggleTextMode(false); 
-
       if (workingLayer instanceof L.Circle) {
         workingLayer.on('pm:change', (e) => {
           const radius = Math.round(e.layer.getRadius());
           e.layer.bindTooltip(`半径: ${radius} m`, {
-            permanent: true,
-            direction: 'right',
-            className: 'js-measuring-tooltip'
+            permanent: true, direction: 'right', className: 'js-measuring-tooltip'
           }).openTooltip();
         });
       }
     });
 
-    map.pm.addControls({
-      position: 'topright',
-    });
-    map.pm.removeControls(); // ★初期は非表示
+    map.pm.addControls({ position: 'topright' });
+    map.pm.removeControls();
 
-    // --- 描画色の初期値管理 ---
     let currentSelectedColor = "#3388ff";
-
-    // --- テキストモードの管理 ---
     let isTextMode = false;
-        
-    // 【追加】経路探索用の変数
     let isRouteMode = false;
     let waypoints = [];
     let routeMarkers = [];
     let routePolyline = null;
 
-    // 【追加】経路探索モードの切り替え
     function toggleRouteMode() {
         isRouteMode = !isRouteMode;
         const panel = document.getElementById('route-panel');
-        
         if (isRouteMode) {
             panel.style.display = 'block';
-            toggleTextMode(false); // テキストモードはOFF
-            map.pm.disableDraw(); // 図形描画もOFF
+            toggleTextMode(false);
+            map.pm.disableDraw();
             document.getElementById('route-status').innerText = "出発地点をクリックしてください";
             map.getContainer().style.cursor = 'crosshair';
         } else {
@@ -540,7 +476,6 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
         }
     }
 
-    // 【追加】経路とマーカーをクリア
     function clearRoute() {
         waypoints = [];
         routeMarkers.forEach(m => map.removeLayer(m));
@@ -553,14 +488,10 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
         document.getElementById('route-result').style.display = 'none';
     }
 
-    // 【修正版】OSRM APIを使用して経路を計算
     async function calculateRoute() {
         if (waypoints.length < 2) return;
-
         const mode = document.querySelector('input[name="routeMode"]:checked').value;
-        // OSRM標準サーバーのプロファイル名に合わせて修正 ('foot' が正解)
         const profile = mode === 'car' ? 'driving' : 'foot'; 
-        
         const url = `https://router.project-osrm.org/route/v1/${profile}/${waypoints[0].lng},${waypoints[0].lat};${waypoints[1].lng},${waypoints[1].lat}?overview=full&geometries=geojson`;
 
         document.getElementById('route-status').innerText = "計算中...";
@@ -568,36 +499,22 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
         try {
             const response = await fetch(url);
             const data = await response.json();
-
             if (data.code !== 'Ok') throw new Error("Route error");
 
             const route = data.routes[0];
-            const distance = (route.distance / 1000).toFixed(2); // km
-            
-            let duration;
-            if (mode === 'foot') {
-                // 徒歩の場合：OSRMは速めなので、日本の基準（分＝80m）に合わせて再計算
-                // 距離(m) / 80 = 分
-                duration = Math.ceil(route.distance / 80);
-            } else {
-                // 自動車の場合：信号待ちなどを考慮し、OSRMの計算値に少し余裕（1.2倍程度）を持たせる
-                duration = Math.ceil((route.duration / 60) * 1.2);
-            }
+            const distance = (route.distance / 1000).toFixed(2);
+            let duration = mode === 'foot' ? Math.ceil(route.distance / 80) : Math.ceil((route.duration / 60) * 1.2);
 
             if (routePolyline) map.removeLayer(routePolyline);
 
             routePolyline = L.geoJSON(route.geometry, {
-                style: { 
-                    color: mode === 'car' ? '#673ab7' : '#28a745',
-                    weight: 6, 
-                    opacity: 0.7 
-                }
+                style: { color: mode === 'car' ? '#673ab7' : '#28a745', weight: 6, opacity: 0.7 }
             }).addTo(map);
 
             const resDiv = document.getElementById('route-result');
             resDiv.innerHTML = `<strong>${mode === 'car' ? '🚗 自動車' : '🚶 徒歩'}</strong><br>距離: ${distance} km<br>時間: 約 ${duration} 分（※）`;
             resDiv.style.display = 'block';
-            document.getElementById('route-status').innerText = "※理論上の最短時間、標準的なOSRMエンジンは交差点での停止・加速などの実際のロスを完全には考慮していません。";
+            document.getElementById('route-status').innerText = "※理論上の最短時間です。";
 
         } catch (error) {
             console.error(error);
@@ -606,85 +523,58 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
         }
     }
 
-    // (ここから下は既存の toggleTextMode(active) や map.on('click', ...) を継続)
-    // 【修正箇所】テキストモード時にダブルズームを無効化
     function toggleTextMode(active) {
       isTextMode = active;
       document.getElementById('text-config-panel').style.display = active ? 'block' : 'none';
       if(active) {
         map.getContainer().style.cursor = 'crosshair';
         map.pm.disableDraw();
-        map.doubleClickZoom.disable(); // ダブルタップズーム無効化
+        map.doubleClickZoom.disable();
       } else {
         map.getContainer().style.cursor = '';
-        map.doubleClickZoom.enable(); // ダブルタップズーム有効化
+        map.doubleClickZoom.enable();
       }
     }
 
-    // ★ここに追加（最適位置）
     let toolsVisible = false;
 
     function toggleRightTools() {
       toolsVisible = !toolsVisible;
-
       const tools = document.querySelectorAll('.right-tool');
-
       if (toolsVisible) {
-        // 右側アイコン表示
         tools.forEach(el => el.style.display = 'block');
-
-        // 図形描写も表示
         map.pm.addControls({
           position: 'topright',
-          drawCircleMarker: false,
-          drawText: false,
-          rotateMode: false,
-          drawMarker: true,
-          drawPolyline: true,
-          drawRectangle: true,
-          drawPolygon: true,
-          drawCircle: true,
-          editMode: false,
-          dragMode: true,
-          cutPolygon: false,
-          removalMode: true,
+          drawCircleMarker: false, drawText: false, rotateMode: false,
+          drawMarker: true, drawPolyline: true, drawRectangle: true,
+          drawPolygon: true, drawCircle: true, editMode: false,
+          dragMode: true, cutPolygon: false, removalMode: true,
         });
-
         map.addControl(customControl);
-
       } else {
-        // 右側アイコン非表示
         tools.forEach(el => el.style.display = 'none');
-
-        // 図形描写も消す
         map.pm.removeControls();
         map.removeControl(customControl);
-
         map.pm.disableDraw();
         toggleTextMode(false);
       }
     }
 
-    // --- 地図クリック時の処理（経路探索・テキスト配置・パネル閉じを統合） ---
     map.on('click', (e) => {
-      // 1. 【追加】経路探索モードがONの場合
       if (isRouteMode) {
         if (waypoints.length < 2) {
           waypoints.push(e.latlng);
-          // クリック地点に一時的なマーカーを設置
           const m = L.marker(e.latlng).addTo(map);
           routeMarkers.push(m);
-
           if (waypoints.length === 1) {
             document.getElementById('route-status').innerText = "目的地をクリックしてください";
           } else if (waypoints.length === 2) {
-            calculateRoute(); // 2点揃ったら計算開始
+            calculateRoute();
           }
         }
-        return; // 経路探索中は、以降のテキスト処理などは行わずに終了する
+        return;
       }
 
-      // 2. 【既存】テキスト配置モード（Ｔアイコン）がONの場合
       if (isTextMode) {
         const text = document.getElementById('custom-text-input').value || "テキスト";
         const size = document.getElementById('custom-text-size').value;
@@ -693,46 +583,30 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
         const textIcon = L.divIcon({
           html: `<div style="color:${currentSelectedColor}; font-size:${size}px; font-family:${family}; white-space:nowrap; font-weight:bold; transform: translate(-50%, -50%); text-align: center;">${text}</div>`,
           className: 'custom-text-marker',
-          iconSize: [0, 0], 
-          iconAnchor: [0, 0] 
+          iconSize: [0, 0], iconAnchor: [0, 0] 
         });
 
         const marker = L.marker(e.latlng, { icon: textIcon }).addTo(map);
-        
-        // Geomanのドラッグと削除を有効にする設定
         marker.pm.enable(); 
-      } 
-      // 3. 【既存】どちらのモードでもない場合
-      else {
+      } else {
         closeControlsPanel();
       }
     });
 
-    // 追加：文字入力起動アイコン と カラーパレット（位置調整版）
     const CustomActionControl = L.Control.extend({
       options: { position: 'topright' },
       onAdd: function() {
         const container = L.DomUtil.create('div', 'leaflet-bar');
         container.style.marginTop = '1px';
         
-        // 1. テキスト入力起動ボタン（Ｔ）
         const textBtn = L.DomUtil.create('a', 'pm-text-btn', container);
         textBtn.innerHTML = 'Ｔ';
         textBtn.title = "テキストの追加";
-        textBtn.style.cursor = "pointer";
-        textBtn.style.display = "flex";
-        textBtn.style.alignItems = "center";
-        textBtn.style.justifyContent = "center";
-        textBtn.style.fontWeight = "bold";
-        textBtn.style.fontSize = "16px";
-        textBtn.onclick = (e) => {
-          e.preventDefault();
-          toggleTextMode(!isTextMode);
-        };
+        textBtn.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px;";
+        textBtn.onclick = (e) => { e.preventDefault(); toggleTextMode(!isTextMode); };
 
-        // 2. カラーパレット（最下部に配置）
         const colorBtnContainer = L.DomUtil.create('div', 'pm-color-picker-container', container);
-        colorBtnContainer.style.marginTop = '0px'; // '5px' などから '0px' に変更
+        colorBtnContainer.style.marginTop = '0px';
         const btn = L.DomUtil.create('div', 'pm-color-btn', colorBtnContainer);
         btn.innerHTML = '🎨';
         btn.title = "描画色の変更";
@@ -741,36 +615,23 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
         input.type = 'color';
         input.id = 'pm-color-input';
         input.value = currentSelectedColor;
-
         input.oninput = (e) => {
           currentSelectedColor = e.target.value;
-          map.pm.setPathOptions({
-            color: currentSelectedColor,
-            fillColor: currentSelectedColor,
-            fillOpacity: 0.3
-          });
+          map.pm.setPathOptions({ color: currentSelectedColor, fillColor: currentSelectedColor, fillOpacity: 0.3 });
           btn.style.borderBottom = `10px solid ${currentSelectedColor}`;
         };
 
-        // 3. 【追加】画像追加ボタン（🖼️）
         const imgBtn = L.DomUtil.create('a', 'pm-image-btn', container);
         imgBtn.innerHTML = '🖼️';
         imgBtn.title = "画像の追加・編集";
-        imgBtn.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; border-top:0px solid #ccc;";
-        imgBtn.onclick = (e) => {
-           e.preventDefault();
-           toggleImageMode();
-        };
+        imgBtn.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px;";
+        imgBtn.onclick = (e) => { e.preventDefault(); toggleImageMode(); };
 
-        // 4. 【追加】画像選択ボタン（指アイコン等）
         const selBtn = L.DomUtil.create('a', 'pm-select-btn', container);
         selBtn.innerHTML = '👆';
         selBtn.title = "配置済み画像を選択";
-        selBtn.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; border-top:0px solid #ccc;";
-        selBtn.onclick = (e) => {
-          e.preventDefault();
-          startImageSelectionMode();
-        };
+        selBtn.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px;";
+        selBtn.onclick = (e) => { e.preventDefault(); startImageSelectionMode(); };
 
         L.DomEvent.disableClickPropagation(container);
         return container;
@@ -778,16 +639,13 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     });
     const customControl = new CustomActionControl();
     map.addControl(customControl);
-    map.removeControl(customControl); // ★初期は閉じる
+    map.removeControl(customControl);
 
     function updateZoomIndicator() {
         const zoom = map.getZoom();
-        // zoom.toFixed(1) を使うことで、小数点第1位までに制限します
         document.getElementById('zoom-indicator').innerText = `Zoom: ${zoom.toFixed(1)}`;
     }
     updateZoomIndicator();
-    // ズーム中もリアルタイムに数値を変化させたい場合は 'zoom' に、
-    // ズームが止まった時だけで良ければ 'zoomend' のままにします
     map.on('zoom', updateZoomIndicator);
     
     const baseLayers = {
@@ -802,36 +660,143 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
       "国土地理院地図": "© 国土地理院"
     };
 
-    // 【旧】 const layerGroups = {}; を削除して、以下に書き換え
+    // =====================================================
+    // 災害ハザードレイヤー
+    // =====================================================
+    const hazardLayers = {};
+    map.createPane('hazardPane');
+    map.getPane('hazardPane').style.zIndex = 300;
+    map.getPane('hazardPane').style.pointerEvents = 'none';
+
+    const hazardAttribution = '出典：<a href="https://disaportal.gsi.go.jp/" target="_blank" rel="noopener noreferrer">ハザードマップポータルサイト</a>';
+
+    hazardLayers["洪水（想定最大規模）"] = L.tileLayer(
+      'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_shinsuishin_data/{z}/{x}/{y}.png',
+      { minZoom: 2, maxZoom: 17, maxNativeZoom: 17, opacity: 0.70, pane: 'hazardPane', attribution: hazardAttribution }
+    );
+
+    hazardLayers["土石流警戒区域"] = L.tileLayer(
+      'https://disaportaldata.gsi.go.jp/raster/05_dosekiryukeikaikuiki/{z}/{x}/{y}.png',
+      { minZoom: 2, maxZoom: 17, maxNativeZoom: 17, opacity: 0.60, pane: 'hazardPane', attribution: hazardAttribution }
+    );
+
+    hazardLayers["急傾斜地の崩壊"] = L.tileLayer(
+      'https://disaportaldata.gsi.go.jp/raster/05_kyukeishakeikaikuiki/{z}/{x}/{y}.png',
+      { minZoom: 2, maxZoom: 17, maxNativeZoom: 17, opacity: 0.60, pane: 'hazardPane', attribution: hazardAttribution }
+    );
+
+    hazardLayers["地すべり"] = L.tileLayer(
+      'https://disaportaldata.gsi.go.jp/raster/05_jisuberikeikaikuiki/{z}/{x}/{y}.png',
+      { minZoom: 2, maxZoom: 17, maxNativeZoom: 17, opacity: 0.60, pane: 'hazardPane', attribution: hazardAttribution }
+    );
+
+    hazardLayers["高潮浸水想定区域"] = L.tileLayer(
+      'https://disaportaldata.gsi.go.jp/raster/03_hightide_l2_shinsuishin_pref_data/47/{z}/{x}/{y}.png',
+      { minZoom: 2, maxZoom: 17, maxNativeZoom: 17, opacity: 0.70, pane: 'hazardPane', attribution: hazardAttribution }
+    );
+
+    hazardLayers["津波浸水想定"] = L.tileLayer(
+      'https://disaportaldata.gsi.go.jp/raster/04_tsunami_newlegend_pref_data/47/{z}/{x}/{y}.png',
+      { minZoom: 2, maxZoom: 17, maxNativeZoom: 17, opacity: 0.70, pane: 'hazardPane', attribution: hazardAttribution }
+    );
+
+    // ★ 追加：ハザード凡例データ構造の定義
+    const hazardLegendData = {
+      "洪水（想定最大規模）": [
+       { color: "#DC7ADC", label: "20m〜" },
+        { color: "#F285C9", label: "10m〜20m" },
+        { color: "#FF9191", label: "5m〜10m 2階の屋根以上" },
+        { color: "#FFB7B7", label: "3m〜5m 2階部分まで浸水する程度" },
+        { color: "#FFD8C0", label: "0.5m〜3m 1階天井まで浸水する程度" },
+        { color: "#F7F5A9", label: "0.0m〜0.5m 大人の膝までつかる程度" },        
+      ],
+      "津波浸水想定": [
+        { color: "#DC7ADC", label: "20m〜" },
+        { color: "#F285C9", label: "10m〜20m" },
+        { color: "#FF9191", label: "5m〜10m 2階の屋根以上" },
+        { color: "#FFB7B7", label: "3m〜5m 2階部分まで浸水する程度" },
+        { color: "#FFD8C0", label: "0.5m〜3m 1階天井まで浸水する程度" },
+        { color: "#F7F5A9", label: "0.0m〜0.5m 大人の膝までつかる程度" },
+      ],
+      "高潮浸水想定区域": [
+        { color: "#DC7ADC", label: "20m〜" },
+        { color: "#F285C9", label: "10m〜20m" },
+        { color: "#FF9191", label: "5m〜10m 2階の屋根以上" },
+        { color: "#FFB7B7", label: "3m〜5m 2階部分まで浸水する程度" },
+        { color: "#FFD8C0", label: "0.5m〜3m 1階天井まで浸水する程度" },
+        { color: "#F7F5A9", label: "0.0m〜0.5m 大人の膝までつかる程度" },
+      ],  
+      "土石流警戒区域": [
+        { color: "#c80000", label: "土石流特別警戒区域" },
+        { color: "#fef001", label: "土石流警戒区域" }
+      ],
+      "急傾斜地の崩壊": [
+        { color: "#c80000", label: "急傾斜地特別警戒区域" },
+        { color: "#fef001", label: "急傾斜地警戒区域" }
+      ],
+      "地すべり": [
+        { color: "#c80000", label: "地すべり特別警戒区域" },
+        { color: "#fef001", label: "地すべり警戒区域" }
+      ]
+    };
+
+    // ★追加：ハザード凡例を閉じる
+    function closeHazardLegend() {
+      const legendDiv = document.getElementById('hazard-legend');
+      if (legendDiv) {
+        legendDiv.style.display = 'none';
+      }
+    }
+
+    // ★ 追加：動的凡例更新処理
+    function updateHazardLegend() {
+      const legendDiv = document.getElementById('hazard-legend');
+      const contentDiv = document.getElementById('hazard-legend-content');
+      contentDiv.innerHTML = '';
+      
+      let activeCount = 0;
+      document.querySelectorAll('.hazard-toggle:checked').forEach(cb => {
+        const val = cb.value;
+        const items = hazardLegendData[val];
+        if (items) {
+          activeCount++;
+          const sec = document.createElement('div');
+          sec.style.marginBottom = "8px";
+          sec.innerHTML = `<strong style="font-size:11px; color:#333;">■ ${val}</strong>`;
+          
+          items.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'legend-item';
+            row.innerHTML = `<span class="legend-color" style="background:${item.color};"></span><span>${item.label}</span>`;
+            sec.appendChild(row);
+          });
+          contentDiv.appendChild(sec);
+        }
+      });
+
+      legendDiv.style.display = activeCount > 0 ? 'block' : 'none';
+    }
+
     const boundaryLayers = {};
     const facilityLayers = {};
 
-    // =====================================================
-    // 📍 住所／緯度経度ジャンプ機能（既存構造完全維持型）
-    // =====================================================
     let inputMarker = null;
-    let lastJumpInput = ""; // ★ここに追加：入力値を保存する変数
+    let lastJumpInput = "";
 
     function jumpToLocation() {
-
         const input = prompt(
             "【注意事項】\nオープンストリートマップの検索は、精度が十分でない場合があり、意図しない場所に移動することがあります。あらかじめご了承ください。\n【入力方法】\n住所 施設または 緯度,経度 を入力してください。\n例:\n品川区 〇〇区役所\n35.6094, 139.7303",lastJumpInput
         );
 
         if (!input) return;
-
         lastJumpInput = input;
 
-
-        // 既存マーカー削除
         if (inputMarker) {
             map.removeLayer(inputMarker);
             inputMarker = null;
         }
 
-        // 緯度経度形式
         if (input.includes(",")) {
-
             const parts = input.split(",");
             const lat = parseFloat(parts[0]);
             const lng = parseFloat(parts[1]);
@@ -841,174 +806,71 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
                 return;
             }
 
-            map.panTo([lat, lng]); // ← 移動（パン）のみに変更 zoom中止
-
-            inputMarker = L.marker([lat, lng]).addTo(map)
-                .bindPopup(input)
-                .openPopup();
+            map.panTo([lat, lng]);
+            inputMarker = L.marker([lat, lng]).addTo(map).bindPopup(input).openPopup();
 
         } else {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=jp&limit=30&accept-language=ja&q=${encodeURIComponent(input)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data || data.length === 0) {
+                    alert("住所が見つかりません");
+                    return;
+                }
 
-        fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&countrycodes=jp&limit=30&accept-language=ja&q=${encodeURIComponent(input)}`
-        )
-        .then(res => res.json())
-        .then(data => {
+                const resultsDiv = document.createElement("div");
+                resultsDiv.style.cssText = "position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:15px; padding-top:35px; z-index:5000; max-height:300px; overflow-y:auto; border:1px solid #ccc; border-radius:8px;";
 
-            if (!data || data.length === 0) {
-                alert("住所が見つかりません");
-                return;
-            }
+                const closeX = document.createElement("div");
+                closeX.innerText = "×";
+                closeX.style.cssText = "position:absolute; top:5px; right:10px; cursor:pointer; font-size:22px; font-weight:bold; background:white; padding:2px 8px; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.3);";
+                closeX.onclick = () => document.body.removeChild(resultsDiv);
+                resultsDiv.appendChild(closeX);
 
-            // ▼ 候補表示ボックス
-            const resultsDiv = document.createElement("div");
-            resultsDiv.style.position = "fixed";
-            resultsDiv.style.top = "50%";
-            resultsDiv.style.left = "50%";
-            resultsDiv.style.transform = "translate(-50%, -50%)";
-            resultsDiv.style.background = "white";
-            resultsDiv.style.padding = "15px";
-            resultsDiv.style.paddingTop = "35px";   // ★ 重要：×ボタン分の余白
-            resultsDiv.style.zIndex = "5000";
-            resultsDiv.style.maxHeight = "300px";
-            resultsDiv.style.overflowY = "auto";
-            resultsDiv.style.border = "1px solid #ccc";
-            resultsDiv.style.borderRadius = "8px";  // ★ 見た目改善
+                data.forEach(place => {
+                    const item = document.createElement("div");
+                    item.style.cssText = "padding:8px; border-bottom:1px solid #eee; cursor:pointer;";
+                    item.innerText = place.display_name;
+                    item.onclick = () => {
+                        const lat = parseFloat(place.lat);
+                        const lng = parseFloat(place.lon);
+                        map.setView([lat, lng]);
+                        inputMarker = L.marker([lat, lng]).addTo(map).bindPopup(place.display_name).openPopup();
+                        document.body.removeChild(resultsDiv);
+                    };
+                    resultsDiv.appendChild(item);
+                });
 
-            // =========================
-            // ★ 右上の × ボタン
-            // =========================
-            const closeX = document.createElement("div");
-            closeX.innerText = "×";
-            closeX.style.position = "absolute";
-            closeX.style.top = "5px";
-            closeX.style.right = "10px";
-            closeX.style.cursor = "pointer";
-            closeX.style.fontSize = "22px";
-            closeX.style.fontWeight = "bold";
+                const closeBtn = document.createElement("div");
+                closeBtn.innerText = "閉じる";
+                closeBtn.style.cssText = "margin-top:10px; text-align:center; cursor:pointer;";
+                closeBtn.onclick = () => document.body.removeChild(resultsDiv);
+                resultsDiv.appendChild(closeBtn);
 
-            // 見やすく（おすすめ）
-            closeX.style.background = "white";
-            closeX.style.padding = "2px 8px";
-            closeX.style.borderRadius = "4px";
-            closeX.style.boxShadow = "0 1px 3px rgba(0,0,0,0.3)";
-
-            closeX.onclick = () => {
-                document.body.removeChild(resultsDiv);
-            };
-
-            resultsDiv.appendChild(closeX);
-
-            // =========================
-            // ★ 候補リスト
-            // =========================
-            data.forEach(place => {
-
-                const item = document.createElement("div");
-                item.style.padding = "8px";
-                item.style.borderBottom = "1px solid #eee";
-                item.style.cursor = "pointer";
-
-                item.innerText = place.display_name;
-
-                item.onclick = () => {
-
-                    const lat = parseFloat(place.lat);
-                    const lng = parseFloat(place.lon);
-
-                    map.setView([lat, lng]);
-
-                    inputMarker = L.marker([lat, lng]).addTo(map)
-                        .bindPopup(place.display_name)
-                        .openPopup();
-
-                    document.body.removeChild(resultsDiv);
-                };
-
-                resultsDiv.appendChild(item);
-            });
-
-            // =========================
-            // ★ 下の「閉じる」ボタン（既存維持）
-            // =========================
-            const closeBtn = document.createElement("div");
-            closeBtn.innerText = "閉じる";
-            closeBtn.style.marginTop = "10px";
-            closeBtn.style.textAlign = "center";
-            closeBtn.style.cursor = "pointer";
-
-            closeBtn.onclick = () => {
-                document.body.removeChild(resultsDiv);
-            };
-
-            resultsDiv.appendChild(closeBtn);
-
-            document.body.appendChild(resultsDiv);
-        })
-        .catch(() => {
-            alert("検索エラーが発生しました");
-        });
-        
+                document.body.appendChild(resultsDiv);
+            })
+            .catch(() => alert("検索エラーが発生しました"));
         }
     }    
 
-    // 4. データ読み込み関数群
     function loadChome(idx) {
       fetch(`geo_0_町丁目境界${idx}.geojson`)
         .then(res => res.json())
         .then(data => {
-
           boundaryLayers[`町丁目境界${idx}`] = L.geoJSON(data, {
-            // renderer: myRenderer,
-
-            style: {
-              color: "red",
-              weight: 1,
-              fillOpacity: 0.03   // ★ 0にしない（スマホ対策）
-            },
-
+            style: { color: "red", weight: 1, fillOpacity: 0.03 },
             onEachFeature: (f, l) => {
-
-              const content =
-                `<strong>${f.properties["町丁目名"]}</strong><br>` +
-                `人口：${f.properties["JINKO"] ?? "不明"}`;
-
-              const isTouch = 'ontouchstart' in window;
-
-              // ===== PC：マウスオーバー =====
-              if (!isTouch) {
-                l.bindTooltip(content, {
-                  sticky: true,
-                  opacity: 0.9,
-                  direction: "auto"
-                });
+              const content = `<strong>${f.properties["町丁目名"]}</strong><br>人口：${f.properties["JINKO"] ?? "不明"}`;
+              if (!('ontouchstart' in window)) {
+                l.bindTooltip(content, { sticky: true, opacity: 0.9, direction: "auto" });
               }
-
-              // ===== スマホ：タップ =====
               l.bindPopup(content);
-
-              // ===== 視覚フィードバック =====
               l.on({
-                mouseover: e => {
-                  e.target.setStyle({
-                    weight: 3,
-                    color: "#ff0000",
-                    fillOpacity: 0.15
-                  });
-                },
-
-                mouseout: e => {
-                  e.target.setStyle({
-                    weight: 1,
-                    color: "red",
-                    fillOpacity: 0.03
-                  });
-                },
-
+                mouseover: e => e.target.setStyle({ weight: 3, color: "#ff0000", fillOpacity: 0.15 }),
+                mouseout: e => e.target.setStyle({ weight: 1, color: "red", fillOpacity: 0.03 }),
               });
             }
           });
-
         })
         .catch(err => console.error(err));
     }
@@ -2533,8 +2395,7 @@ fetch("geo_47_地域密着型通所介護.geojson")
 })
 .catch(e => {});
 
-    // --- ★修正：UIパネル上の操作が地図（ズーム等）に伝わらないように設定 ---
-    ['controls', 'search-panel', 'route-panel', 'text-config-panel', 'info-panel'].forEach(id => {
+    ['controls', 'search-panel', 'route-panel', 'text-config-panel', 'info-panel', 'hazard-legend'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             L.DomEvent.disableClickPropagation(el);
@@ -2544,25 +2405,37 @@ fetch("geo_47_地域密着型通所介護.geojson")
 
     for(let i=1; i<=5; i++) { loadChome(i.toString().padStart(2, '0')); }
 
-    // --- 新コード：ここから差し替え ---
-    // 1. 境界線チェックボックスの動作
     document.querySelectorAll('.boundary-toggle').forEach(cb => {
         cb.addEventListener('change', function() {
-            const g = boundaryLayers[this.value]; // 分離したオブジェクトを参照
+            const g = boundaryLayers[this.value];
             if (!g) return;
             this.checked ? g.addTo(map) : map.removeLayer(g);
         });
     });
 
-    // 2. 施設種類チェックボックスの動作
-    // 3320行目付近：施設種類の一括操作
+    // ★ 修正：災害ハザードチェックボックスの動作（凡例連動付き）
+    document.querySelectorAll('.hazard-toggle').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const g = hazardLayers[this.value];
+            if (!g) {
+                console.error('災害レイヤー未登録:', this.value);
+                return;
+            }
+            if (this.checked) {
+                g.addTo(map);
+            } else {
+                map.removeLayer(g);
+            }
+            updateHazardLegend();
+        });
+    });
+
     document.querySelectorAll('.facility-toggle').forEach(cb => {
         cb.addEventListener('change', function() {
             const g = facilityLayers[this.value];
             if (!g) return;
             if (this.checked) {
                 g.addTo(map);
-                // requestRedrawではなく、Leafletの描画サイクルに乗せる
                 setTimeout(() => {
                     if (myRenderer && myRenderer._requestRedraw) {
                         myRenderer._requestRedraw();
@@ -2579,8 +2452,7 @@ fetch("geo_47_地域密着型通所介護.geojson")
         const resDiv = document.getElementById('search-results');
         resDiv.innerHTML = '';
         if(!val) return;
-        const keywords = val.split(/[\s　]+/);
-        // 施設レイヤーのみをループ対象にする
+        const keywords = val.split(/[\s ]+/);
         for (let label in facilityLayers) {
             if (!facilityLayers[label]) continue;
             facilityLayers[label].eachLayer(l => {
@@ -2591,8 +2463,8 @@ fetch("geo_47_地域密着型通所介護.geojson")
                     item.style = "padding:8px; border-bottom:1px solid #eee; font-size:13px;";
                     item.innerText = l.feature.properties["内容"];
                     item.onclick = () => {
-                        map.pm.disableDraw();   // 描画を強制終了
-                        toggleTextMode(false);  // テキストモードも終了
+                        map.pm.disableDraw();
+                        toggleTextMode(false);
                         document.getElementById('search-panel').style.display = 'none';
                         if (!map.hasLayer(l)) { l.addTo(map); }
                         document.getElementById('search-input').blur();
@@ -2605,31 +2477,21 @@ fetch("geo_47_地域密着型通所介護.geojson")
         }
     };
 
-    // 追加：検索結果をすべて地図に表示する機能
     document.getElementById('show-all-results-btn').onclick = function() {
         const val = document.getElementById('search-input').value.toLowerCase().trim();
         if(!val) return;
         
-        const keywords = val.split(/[\s　]+/);
+        const keywords = val.split(/[\s ]+/);
         const bounds = []; 
 
-        // 修正ポイント1: layerGroups ではなく facilityLayers をループ回す
         for (let label in facilityLayers) {
             if (!facilityLayers[label]) continue;
-
-            // 修正ポイント2: facilityLayers の各レイヤーを処理する
             facilityLayers[label].eachLayer(l => {
                 const name = (l.feature.properties["内容"] || "").toLowerCase();
                 if(keywords.every(kw => name.includes(kw))) {
-                    // 修正ポイント3: 見つかった施設のチェックボックスも連動してONにする（推奨）
                     const cb = document.querySelector(`.facility-toggle[value="${label}"]`);
-                    if (cb && !cb.checked) {
-                        cb.checked = true;
-                    }
-
-                    if (!map.hasLayer(l)) { 
-                        l.addTo(map); 
-                    }
+                    if (cb && !cb.checked) { cb.checked = true; }
+                    if (!map.hasLayer(l)) { l.addTo(map); }
                     bounds.push(l.getLatLng());
                 }
             });
@@ -2652,40 +2514,9 @@ fetch("geo_47_地域密着型通所介護.geojson")
         if(!isVisible) p.style.display = 'block';
     }
 
-    // --- 新コード：4つのボタン用に書き換え ---
-    // 境界線の一括操作
-    // 1. 境界線チェックボックスの動作
-    document.querySelectorAll('.boundary-toggle').forEach(cb => {
-        cb.addEventListener('change', function() {
-            const g = boundaryLayers[this.value]; // 境界線用変数を参照
-            if (!g) return;
-            if (this.checked) { g.addTo(map); } 
-            else { map.removeLayer(g); }
-        });
-    });
     document.getElementById('deselectBoundariesBtn').onclick = () => {
         document.querySelectorAll('.boundary-toggle').forEach(cb => { cb.checked = false; cb.dispatchEvent(new Event('change')); });
     };
-
-    // 施設種類の一括操作
-    // 2. 施設種類チェックボックスの動作
-        document.querySelectorAll('.facility-toggle').forEach(cb => {
-        cb.addEventListener('change', function() {
-            const g = facilityLayers[this.value];
-            if (!g) return;
-            if (this.checked) {
-                g.addTo(map);
-                // requestRedrawではなく、Leafletの描画サイクルに乗せる
-                setTimeout(() => {
-                    if (myRenderer && myRenderer._requestRedraw) {
-                        myRenderer._requestRedraw();
-                    }
-                }, 10);
-            } else {
-                map.removeLayer(g);
-            }
-        });
-    });
 
     document.getElementById('deselectFacilitiesBtn').onclick = () => {
         document.querySelectorAll('.facility-toggle').forEach(cb => { cb.checked = false; cb.dispatchEvent(new Event('change')); });
@@ -2704,14 +2535,12 @@ fetch("geo_47_地域密着型通所介護.geojson")
       if (controls && controls.style.display === 'block') { controls.style.display = 'none'; }
     }
 
-    // 追加：再起動の確認ダイアログ
     function confirmReload() {
         if (window.confirm("初期化しますか？")) {
             location.reload();
         }
     }
 
-    // 境界線の全て選択
     document.getElementById('selectBoundariesBtn').onclick = () => {
         document.querySelectorAll('.boundary-toggle').forEach(cb => { 
             cb.checked = true; 
@@ -2719,7 +2548,6 @@ fetch("geo_47_地域密着型通所介護.geojson")
         });
     };
 
-    // 施設種類の全て選択
     document.getElementById('selectFacilitiesBtn').onclick = () => {
         document.querySelectorAll('.facility-toggle').forEach(cb => { 
             cb.checked = true; 
@@ -2727,10 +2555,8 @@ fetch("geo_47_地域密着型通所介護.geojson")
         });
     };    
 
-    // === ここから【追加】：画像操作ロジック本体 ===
     let currentImgMarker = null;
 
-    // GitHubに登録した画像URLリスト (適宜書き換えてください)
     const githubImageUrls = [
         "https://hmc48.github.io/23269.png",
         "https://hmc48.github.io/23274.png",
@@ -2742,7 +2568,6 @@ fetch("geo_47_地域密着型通所介護.geojson")
         "https://hmc48.github.io/iryou_jujisya.png"
     ];
 
-     // 初期化：パネル内のGitHub画像リストを生成
      const imgListContainer = document.getElementById('github-images');
      if (imgListContainer) {
         githubImageUrls.forEach(url => {
@@ -2754,7 +2579,6 @@ fetch("geo_47_地域密着型通所介護.geojson")
         });
     }
 
-    // ファイル選択ボタンのイベント
     document.getElementById('image-file-input').onchange = (e) => {
         const file = e.target.files[0];
          if (file) {
@@ -2769,21 +2593,14 @@ fetch("geo_47_地域密着型通所介護.geojson")
         const isVisible = panel.style.display === 'block';
         panel.style.display = isVisible ? 'none' : 'block';
         if (!isVisible) {
-            // 画像モードを開くときは他の描画モードをOFFにする
             if(map.pm) map.pm.disableDraw();
         }
     }
 
     function addImageToMap(url) {
-        // 1. 地図コンテナのサイズを取得
         const container = map.getContainer();
         const width = container.offsetWidth;
-
-        // 2. 画面右端から250px、上から100pxの位置を指定
-        // ここでカッコの閉じ忘れがないか注意
         const targetPoint = L.point(width - 250, 100); 
-
-        // 3. ピクセル座標を緯度経度に変換
         const targetLatLng = map.containerPointToLayerPoint(targetPoint);
         const coords = map.layerPointToLatLng(targetLatLng);
 
@@ -2794,7 +2611,6 @@ fetch("geo_47_地域密着型通所介護.geojson")
             iconAnchor: [50, 50]
         });
 
-        // 4. マーカーを作成（coordsを使用）
         const marker = L.marker(coords, { draggable: true }).addTo(map);
         marker.setIcon(icon);
         setupImageEdit(marker);
@@ -2807,7 +2623,6 @@ fetch("geo_47_地域密着型通所介護.geojson")
         imgElement.classList.add('editing-image');
         marker.dragging.enable();
 
-        // パネルを表示し、スライダー値を現在の画像に合わせる（簡易実装）
         document.getElementById('image-config-panel').style.display = 'block';
 
         const update = () => {
@@ -2850,10 +2665,6 @@ fetch("geo_47_地域密着型通所介護.geojson")
         if (currentImgMarker) finalizeImage(currentImgMarker);
         document.getElementById('image-config-panel').style.display = 'none';
     }
-    // === ここまで【追加】===
-
-    // --- 既存コード (scriptタグの終わり) ---
-
   </script>
 </body>
 </html>
