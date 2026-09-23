@@ -242,6 +242,14 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     <label class="layer-item"><input type="radio" name="baseLayer" value="標準" checked> オープンストリートマップ</label>
     <label class="layer-item"><input type="radio" name="baseLayer" value="航空写真"> 航空写真(国土地理院)</label>
     <label class="layer-item"><input type="radio" name="baseLayer" value="国土地理院地図"> 国土地理院地図</label>
+    <div style="font-size:11px;font-weight:bold;color:#555;margin:7px 0 3px;">▼ 過去の航空写真</div>
+    <label class="layer-item"><input type="radio" name="baseLayer" value="航空写真_1987_1990"> 1987～1990年※</label>
+    <label class="layer-item"><input type="radio" name="baseLayer" value="航空写真_1984_1986"> 1984～1986年※</label>
+    <label class="layer-item"><input type="radio" name="baseLayer" value="航空写真_1979_1983"> 1979～1983年※</label>
+    <label class="layer-item"><input type="radio" name="baseLayer" value="航空写真_1974_1978"> 1974～1978年</label>
+    <label class="layer-item"><input type="radio" name="baseLayer" value="航空写真_1961_1969"> 1961～1969年※</label>
+    <label class="layer-item"><input type="radio" name="baseLayer" value="航空写真_1945_1950"> 1945～1950年※</label>
+    <div style="font-size:11px;font-weight:bold;color:#555;margin:7px 0 3px;">※地域により表示されません</div>
     <div class="section-title">災害ハザード</div>
     <label class="layer-item"><input type="checkbox" class="hazard-toggle" value="洪水（想定最大規模）"> 洪水（想定最大規模）</label>
     <label class="layer-item"><input type="checkbox" class="hazard-toggle" value="土石流警戒区域"> 土石流警戒区域</label>
@@ -651,13 +659,27 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     const baseLayers = {
       "標準": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 21, maxNativeZoom: 19 }),
       "国土地理院地図": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { maxZoom: 21, maxNativeZoom: 18 }),
-      "航空写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', { maxZoom: 21, maxNativeZoom: 18 })
+      "航空写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', { maxZoom: 21, maxNativeZoom: 18 }),
+
+      // 国土地理院・年代別の写真
+      "航空写真_1987_1990": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo4/{z}/{x}/{y}.jpg', { minZoom: 10, maxZoom: 21, maxNativeZoom: 17 }),
+      "航空写真_1984_1986": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo3/{z}/{x}/{y}.jpg', { minZoom: 10, maxZoom: 21, maxNativeZoom: 17 }),
+      "航空写真_1979_1983": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo2/{z}/{x}/{y}.jpg', { minZoom: 10, maxZoom: 21, maxNativeZoom: 17 }),
+      "航空写真_1974_1978": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg', { minZoom: 10, maxZoom: 21, maxNativeZoom: 17 }),
+      "航空写真_1961_1969": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png', { minZoom: 10, maxZoom: 21, maxNativeZoom: 17 }),
+      "航空写真_1945_1950": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', { minZoom: 10, maxZoom: 21, maxNativeZoom: 17 })
     };
     baseLayers["標準"].addTo(map);
     const creditText = {
       "標準": "© OpenStreetMap",
       "航空写真": "© 国土地理院（航空写真）",
-      "国土地理院地図": "© 国土地理院"
+      "国土地理院地図": "© 国土地理院",
+      "航空写真_1987_1990": "© 国土地理院（1987～1990年 空中写真）",
+      "航空写真_1984_1986": "© 国土地理院（1984～1986年 空中写真）",
+      "航空写真_1979_1983": "© 国土地理院（1979～1983年 空中写真）",
+      "航空写真_1974_1978": "© 国土地理院（1974～1978年 空中写真）",
+      "航空写真_1961_1969": "© 国土地理院（1961～1969年 空中写真）",
+      "航空写真_1945_1950": "© 国土地理院（1945～1950年 空中写真）"
     };
 
     // =====================================================
@@ -691,12 +713,12 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     );
 
     hazardLayers["高潮浸水想定区域"] = L.tileLayer(
-      'https://disaportaldata.gsi.go.jp/raster/03_hightide_l2_shinsuishin_pref_data/47/{z}/{x}/{y}.png',
+      'https://disaportaldata.gsi.go.jp/raster/03_hightide_l2_shinsuishin_pref_data/22/{z}/{x}/{y}.png',
       { minZoom: 2, maxZoom: 17, maxNativeZoom: 17, opacity: 0.70, pane: 'hazardPane', attribution: hazardAttribution }
     );
 
     hazardLayers["津波浸水想定"] = L.tileLayer(
-      'https://disaportaldata.gsi.go.jp/raster/04_tsunami_newlegend_pref_data/47/{z}/{x}/{y}.png',
+      'https://disaportaldata.gsi.go.jp/raster/04_tsunami_newlegend_pref_data/22/{z}/{x}/{y}.png',
       { minZoom: 2, maxZoom: 17, maxNativeZoom: 17, opacity: 0.70, pane: 'hazardPane', attribution: hazardAttribution }
     );
 
@@ -2524,12 +2546,18 @@ fetch("geo_47_地域密着型通所介護.geojson")
 
     document.querySelectorAll('input[name="baseLayer"]').forEach(radio => {
       radio.addEventListener('change', function() {
-        for (let key in baseLayers) { map.removeLayer(baseLayers[key]); }
-        baseLayers[this.value].addTo(map);
+        for (let key in baseLayers) {
+          if (map.hasLayer(baseLayers[key])) {
+            map.removeLayer(baseLayers[key]);
+          }
+        }
+        if (baseLayers[this.value]) {
+          baseLayers[this.value].addTo(map);
+        }
         document.getElementById("credit-title").innerText = creditText[this.value] || "";
       });
     });
-
+    
     function closeControlsPanel() {
       const controls = document.getElementById('controls');
       if (controls && controls.style.display === 'block') { controls.style.display = 'none'; }
