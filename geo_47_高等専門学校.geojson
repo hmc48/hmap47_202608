@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "geo_47_高等専門学校",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::6668" } },
+"features": [
+{ "type": "Feature", "properties": { "P29_001": "47209", "P29_002": "G147110111832", "P29_003": "16005", "P29_004": "沖縄工業高等専門学校", "P29_005": "沖縄県名護市字辺野古905", "P29_006": "1", "P29_007": "0", "P29_008": "00", "P29_009": null }, "geometry": { "type": "Point", "coordinates": [ 128.030307524528695, 26.526472518329197 ] } }
+]
+}

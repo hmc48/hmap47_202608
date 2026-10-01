@@ -114,18 +114,83 @@ body { margin:0; padding:0; overflow:hidden; font-family: sans-serif; }
 input[type="checkbox"], input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
 
 .pm-color-picker-container {
-  margin-top: 5px !important;
-  border-top: 1px solid #ccc;
-  padding-top: 5px;
+  margin: 0 !important;
+  padding: 0;
+  border: 0;
+  width: 30px;
+  height: 30px;
+  position: relative;
 }
+
 .pm-color-btn {
-  width: 34px; height: 34px; background: white; border: 2px solid rgba(0,0,0,0.2);
-  border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  font-size: 18px; box sizing: border-box;
+  width: 30px;
+  height: 30px;
+  background: white;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 30px;
+  box-sizing: border-box;
+  position: relative;
 }
+
 .pm-color-btn:hover { background: #f4f4f4; }
+
 #pm-color-input {
-  position: absolute; opacity: 0; width: 34px; height: 34px; cursor: pointer;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.custom-action-grid {
+  width: 60px !important;
+  height: 60px !important;
+  display: grid !important;
+  grid-template-columns: 30px 30px;
+  grid-template-rows: 30px 30px;
+  margin-top: 10px !important;
+  box-sizing: border-box;
+}
+
+.custom-action-grid > a,
+.custom-action-grid > div {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.custom-action-grid .pm-text-btn {
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 30px;
+}
+
+.custom-action-grid .pm-image-btn,
+.custom-action-grid .pm-select-btn {
+  font-size: 17px;
+  line-height: 30px;
+}
+
+.custom-action-grid .pm-color-picker-container {
+  border: 0 !important;
+  border-top: 0 !important;
+  padding: 0 !important;
 }
 
 #text-config-panel {
@@ -149,7 +214,7 @@ input[type="checkbox"], input[type="radio"] { margin-right: 10px; transform: sca
 button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
 .search-item:hover { background:#f0f0f0; cursor:pointer; }
 .leaflet-top.leaflet-right {
-  margin-top: 275px;
+  margin-top: 320px;
 }
 .leaflet-overlay-pane {
   z-index: 400 !important;
@@ -164,6 +229,77 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
 .img-sample { width: 40px; height: 40px; cursor: pointer; border: 1px solid #ccc; object-fit: cover; }
 .img-sample:hover { border-color: #fd63db; }
 .editing-image { outline: 2px dashed #ff4500; cursor: move; }
+
+/* ===== 防災マップ分割印刷 ===== */
+#print-map-btn {
+  top: 290px; right: 15px; background:#198754; color:white;
+}
+#print-panel {
+  display:none; position:fixed; top:55px; right:65px; width:260px;
+  background:white; padding:12px; border-radius:8px; z-index:6000;
+  box-shadow:0 4px 15px rgba(0,0,0,0.25); font-size:13px;
+}
+#print-panel select, #print-panel button {
+  width:100%; box-sizing:border-box; padding:7px; margin-top:6px;
+}
+#print-grid-overlay {
+  display:none; position:fixed; left:0; top:0; width:100vw; height:100vh;
+  z-index:4500; pointer-events:none;
+}
+.print-grid-line {
+  position:absolute; background:#ff0000; opacity:.85;
+}
+.print-grid-label {
+  position:absolute; background:rgba(255,255,255,.9); color:#d00;
+  border:1px solid #d00; padding:2px 5px; font-weight:bold; font-size:12px;
+}
+#print-preview {
+  display:none; position:fixed; inset:0; z-index:10000; background:#777;
+  overflow:auto; padding:20px; box-sizing:border-box;
+}
+#print-preview-inner { display:flex; flex-direction:column; align-items:center; gap:18px; }
+.print-page {
+  width:1122px; height:793px; background:white; position:relative;
+  box-sizing:border-box; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.35);
+}
+.print-page-title {
+  position:absolute; left:10px; top:8px; z-index:1000; background:rgba(255,255,255,.9);
+  padding:4px 8px; font-weight:bold; font-size:13px;
+}
+.print-page.portrait { width:793px; height:1122px; }
+.print-page.a3-landscape { width:1587px; height:1122px; }
+.print-page.a3-portrait { width:1122px; height:1587px; }
+.print-page-map { position:absolute; left:0; right:0; top:0; bottom:0; }
+.print-close {
+  position:fixed; right:20px; top:15px; z-index:11000; padding:8px 14px;
+  background:#dc3545; color:white; border:0; border-radius:5px; cursor:pointer;
+  font-size:14px;
+}
+.print-help { font-size:11px; color:#555; line-height:1.45; margin-top:6px; }
+@media print {
+  @page A4Landscape { size: A4 landscape; margin: 0; }
+  @page A4Portrait { size: A4 portrait; margin: 0; }
+  @page A3Landscape { size: A3 landscape; margin: 0; }
+  @page A3Portrait { size: A3 portrait; margin: 0; }
+  body > *:not(#print-preview) { display:none !important; }
+  #print-preview { display:block !important; position:static; padding:0; background:white; overflow:visible; }
+  #print-preview-inner { display:block; }
+  .print-page {
+    width:297mm; height:210mm; margin:0; box-shadow:none; page-break-after:always; page:A4Landscape;
+  }
+  .print-page.portrait {
+    width:210mm; height:297mm; page:A4Portrait;
+  }
+  .print-page.a3-landscape {
+    width:420mm; height:297mm; page:A3Landscape;
+  }
+  .print-page.a3-portrait {
+    width:297mm; height:420mm; page:A3Portrait;
+  }
+  .print-page:last-child { page-break-after:auto; }
+  .print-close { display:none !important; }
+}
+
 </style>
 </head>
 <body>
@@ -257,48 +393,62 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
 
     <div class="section-title">バス停・施設・境界線</div>
 <div class="section-title" style="margin-top:5px; color:#555; font-size:11px;">▼ バス停留所</div>
-    <label class="layer-item"><input type="checkbox" class="bus-toggle" value="バス停留所"> バス停留所</label>
+    <label class="layer-item"><input type="checkbox" class="bus-toggle" value="バス停留所"> <span style="color:orange; font-size:16px; font-weight:bold;">▲</span> バス停留所</label>
+<div class="section-title" style="margin-top:10px; color:#555; font-size:11px;">▼ 学校</div>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="小学校"> <span style="color:green; font-size:16px; font-weight:bold;">★</span> 小学校</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="中学校"> <span style="color:red; font-size:16px; font-weight:bold;">♥</span> 中学校</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="中等教育学校"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 中等教育学校</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="高校"> <span style="color:blue; font-size:16px; font-weight:bold;">■</span> 高校</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="高等専門学校"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 高等専門学校</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="短期大学"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 短期大学</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="大学"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 大学</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="幼稚園"> <span style="color:deeppink; font-size:16px; font-weight:bold;">♠</span> 幼稚園</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="特別支援学校"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 特別支援学校</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="幼保連携型認定こども園"> <span style="color:orange; font-size:16px; font-weight:bold;">♣</span> 幼保連携型認定こども園</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="義務教育学校"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 義務教育学校</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="各種学校"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 各種学校</label>
+    <label class="layer-item"><input type="checkbox" class="school-toggle" value="専修学校"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 専修学校</label>
 <div class="section-title" style="margin-top:10px; color:#555; font-size:11px;">▼ 施設種類</div>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="病院"> 病院</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="診療所"> 診療所</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="歯科"> 歯科</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="助産院"> 助産院</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="薬局"> 薬局</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問介護"> 訪問介護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問入浴介護"> 訪問入浴介護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問看護"> 訪問看護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問リハビリテーション"> 訪問リハビリテーション</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="通所介護"> 通所介護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="通所介護（療養通所介護）"> 通所介護（療養通所介護）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="通所リハビリテーション"> 通所リハビリテーション</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="福祉用具貸与"> 福祉用具貸与</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所生活介護"> 短期入所生活介護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所療養介護（介護老人保健施設）"> 短期入所療養介護（介護老人保健施設）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所療養介護（療養病床を有する病院等）"> 短期入所療養介護（療養病床を有する病院等）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所療養介護（介護医療院）"> 短期入所療養介護（介護医療院）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="認知症対応型共同生活介護"> 認知症対応型共同生活介護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（有料老人ホーム）"> 特定施設入居者生活介護（有料老人ホーム）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（軽費老人ホーム）"> 特定施設入居者生活介護（軽費老人ホーム）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（サービス付き高齢者向け住宅）"> 特定施設入居者生活介護（サービス付き高齢者向け住宅）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（有料老人ホーム・外部サービス利用型）"> 特定施設入居者生活介護（有料老人ホーム・外部サービス利用型）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（軽費老人ホーム・外部サービス利用型）"> 特定施設入居者生活介護（軽費老人ホーム・外部サービス利用型）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（サービス付き高齢者向け住宅・外部サービス利用型）"> 特定施設入居者生活介護（サービス付き高齢者向け住宅・外部サービス利用型）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型特定施設入居者生活介護（有料老人ホーム）"> 地域密着型特定施設入居者生活介護（有料老人ホーム）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型特定施設入居者生活介護（軽費老人ホーム）"> 地域密着型特定施設入居者生活介護（軽費老人ホーム）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型特定施設入居者生活介護（サービス付き高齢者向け住宅）"> 地域密着型特定施設入居者生活介護（サービス付き高齢者向け住宅）</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定福祉用具販売"> 特定福祉用具販売</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="居宅介護支援"> 居宅介護支援</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護老人福祉施設"> 介護老人福祉施設</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護老人保健施設"> 介護老人保健施設</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護療養型医療施設"> 介護療養型医療施設</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型介護老人福祉施設入所者生活介護"> 地域密着型介護老人福祉施設入所者生活介護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護医療院"> 介護医療院</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="夜間対応型訪問介護"> 夜間対応型訪問介護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="認知症対応型通所介護"> 認知症対応型通所介護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="小規模多機能型居宅介護"> 小規模多機能型居宅介護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="定期巡回・随時対応型訪問介護看護"> 定期巡回・随時対応型訪問介護看護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="看護小規模多機能型居宅介護"> 看護小規模多機能型居宅介護</label>
-    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型通所介護"> 地域密着型通所介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="病院"> <span style="color:red; font-size:16px; font-weight:bold;">★</span> 病院</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="診療所"> <span style="color:blue; font-size:16px; font-weight:bold;">♥</span> 診療所</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="歯科"> <span style="color:yellow; font-size:16px; font-weight:bold;">♣</span> 歯科</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="助産院"> <span style="color:red; font-size:16px; font-weight:bold;">■</span> 助産院</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="薬局"> <span style="color:green; font-size:16px; font-weight:bold;">♠</span> 薬局</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 訪問介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問入浴介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 訪問入浴介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問看護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 訪問看護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="訪問リハビリテーション"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 訪問リハビリテーション</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="通所介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 通所介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="通所介護（療養通所介護）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 通所介護（療養通所介護）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="通所リハビリテーション"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 通所リハビリテーション</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="福祉用具貸与"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 福祉用具貸与</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所生活介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 短期入所生活介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所療養介護（介護老人保健施設）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 短期入所療養介護（介護老人保健施設）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所療養介護（療養病床を有する病院等）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 短期入所療養介護（療養病床を有する病院等）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="短期入所療養介護（介護医療院）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 短期入所療養介護（介護医療院）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="認知症対応型共同生活介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 認知症対応型共同生活介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（有料老人ホーム）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 特定施設入居者生活介護（有料老人ホーム）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（軽費老人ホーム）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 特定施設入居者生活介護（軽費老人ホーム）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（サービス付き高齢者向け住宅）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 特定施設入居者生活介護（サービス付き高齢者向け住宅）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（有料老人ホーム・外部サービス利用型）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 特定施設入居者生活介護（有料老人ホーム・外部サービス利用型）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（軽費老人ホーム・外部サービス利用型）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 特定施設入居者生活介護（軽費老人ホーム・外部サービス利用型）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定施設入居者生活介護（サービス付き高齢者向け住宅・外部サービス利用型）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 特定施設入居者生活介護（サービス付き高齢者向け住宅・外部サービス利用型）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型特定施設入居者生活介護（有料老人ホーム）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 地域密着型特定施設入居者生活介護（有料老人ホーム）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型特定施設入居者生活介護（軽費老人ホーム）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 地域密着型特定施設入居者生活介護（軽費老人ホーム）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型特定施設入居者生活介護（サービス付き高齢者向け住宅）"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 地域密着型特定施設入居者生活介護（サービス付き高齢者向け住宅）</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="特定福祉用具販売"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 特定福祉用具販売</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="居宅介護支援"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 居宅介護支援</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護老人福祉施設"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 介護老人福祉施設</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護老人保健施設"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 介護老人保健施設</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護療養型医療施設"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 介護療養型医療施設</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型介護老人福祉施設入所者生活介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 地域密着型介護老人福祉施設入所者生活介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="介護医療院"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 介護医療院</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="夜間対応型訪問介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 夜間対応型訪問介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="認知症対応型通所介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 認知症対応型通所介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="小規模多機能型居宅介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 小規模多機能型居宅介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="定期巡回・随時対応型訪問介護看護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 定期巡回・随時対応型訪問介護看護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="看護小規模多機能型居宅介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 看護小規模多機能型居宅介護</label>
+    <label class="layer-item"><input type="checkbox" class="facility-toggle" value="地域密着型通所介護"> <span style="color:brown; font-size:16px; font-weight:bold;">●</span> 地域密着型通所介護</label>
 <div class="section-title" style="margin-top:10px; color:#555; font-size:11px;">▼ 行政境界（町丁目）</div>
     <label class="layer-item"><input type="checkbox" class="boundary-toggle" value="町丁目境界01"> 北部医療圏</label>
     <label class="layer-item"><input type="checkbox" class="boundary-toggle" value="町丁目境界02"> 中部医療圏</label>
@@ -318,6 +468,38 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
   
   <div id="route-btn" class="circle-btn right-tool" title="経路検索" onclick="toggleRouteMode()">🚗</div>
   <div id="reload-btn" class="circle-btn right-tool" title="初期化" onclick="confirmReload()">↩️</div>
+  <div id="print-map-btn" class="circle-btn right-tool" title="防災マップ印刷" onclick="togglePrintPanel()">🖨️</div>
+  <div id="print-panel">
+    <span class="close-x" onclick="togglePrintPanel()">×</span>
+    <div class="section-title">防災マップ印刷</div>
+    <div style="margin-top:8px;">用紙サイズ</div>
+    <select id="print-paper-size">
+      <option value="A4" selected>A4</option>
+      <option value="A3">A3</option>
+    </select>
+    <div style="margin-top:8px;">分割数</div>
+    <select id="print-grid-size">
+      <option value="2x2">2×2（4枚）</option>
+      <option value="3x3" selected>3×3（9枚）</option>
+      <option value="4x4">4×4（16枚）</option>
+    </select>
+    <div style="margin-top:8px;">用紙方向</div>
+    <select id="print-orientation">
+      <option value="landscape" selected>横</option>
+      <option value="portrait">縦</option>
+    </select>
+    <button onclick="showPrintGrid()" style="background:#198754;color:white;border:0;">① 印刷範囲を表示</button>
+    <button onclick="createPosterPrint()" style="background:#0d6efd;color:white;border:0;">② 分割印刷ページを作成</button>
+    <div class="print-help">
+      現在の地図範囲を基準に、選択した用紙サイズのページへ分割します。<br>
+      先に地図を移動・拡大縮小して、印刷したい範囲を表示してください。<br>      「②」を押すと選択した枚数の印刷ページが表示されます。
+    </div>
+  </div>
+  <div id="print-grid-overlay"></div>
+  <div id="print-preview">
+    <button class="print-close" onclick="closePrintPreview()">閉じる</button>
+    <div id="print-preview-inner"></div>
+  </div>
   
   <div id="route-panel">
     <span class="close-x" onclick="toggleRouteMode()">×</span>
@@ -340,7 +522,14 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     <span style="color:green;">♠</span>薬局
     <span style="color:red;">■</span>助産院
     <span style="color:brown;">●</span>介護
-    <span style="color:orange;">　▲</span>バス停留所<br>
+    <span style="color:orange;">　▲</span>バス停 （OpenStreetMap 2026/09データ）<br>
+    【学校関係】（国土地理院・国土交通省 2023年度版）<br>
+    <span style="color:green;">★</span>小学校
+    <span style="color:red;">♥</span>中学校
+    <span style="color:blue;">■</span>高校
+    <span style="color:deeppink;">♠</span>幼稚園
+    <span style="color:orange;">♣</span>幼保連携型認定こども園
+    <span style="color:brown;">●</span>中等教育学校・高等専門学校・短期大学・大学・特別支援学校・義務教育学校・各種学校・専修学校<br>
     【出典】<br>
     医療情報ネットのオープンデータ（厚生労働省）
     (2026年6月1日時点) <br>
@@ -352,7 +541,6 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     <a href="https://www.mhlw.go.jp/stf/kaigo-kouhyou_opendata.html" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">厚生労働省の介護ページ</a>
     &nbsp;&nbsp;&nbsp;
     <a href="https://www.mhlw.go.jp/chosakuken/index.html" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">同利用規約</a><br>
-    OpenStreetMap（バス停留所データ）<br>
     e-Stat国勢調査2020年<br>
     【災害ハザード】<br>
     洪水（想定最大規模）、土石流、急傾斜地の崩壊、地すべり、高潮、津波<br>
@@ -369,6 +557,7 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     <span style="background-color: orange; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">📍</span> 住所検索(and検索)<br>
     <span style="background-color: blue; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🚗</span> 経路探索（自動車、徒歩）<br>
     <span style="background-color: gray; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">↩️</span> 初期化<br>
+    <span style="background-color: gray; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🖨️</span> 防災マップ印刷（分割印刷A4/A3 Max 4×4（16枚））<br> 
     <span style="background-color: gray; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">✏️</span> 線、四角形、多角形、円の描写、テキスト入力<br>
     <span style="background-color: yellow; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🖼️</span> 任意の画像、イラストの挿入<br>
     【利用規約・ご意見・ご感想・お問い合わせ】<br>
@@ -382,8 +571,8 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
   <script>
-    const colorMap = {"赤": "red", "青": "blue", "オレンジ": "orange", "緑": "green", "茶": "brown", "黄": "yellow"};
-    const shapeMap = {"病院": "star", "診療所": "heart", "歯科": "club", "助産院": "square", "薬局": "spade", "バス停留所": "triangle"};
+    const colorMap = {"赤": "red", "青": "blue", "オレンジ": "orange", "ピンク": "deeppink", "緑": "green", "茶": "brown", "黄": "yellow"};
+    const shapeMap = {"病院": "star", "診療所": "heart", "歯科": "club", "助産院": "square", "薬局": "spade", "バス停留所": "triangle", "小学校": "star", "中学校": "heart", "高校": "square", "中等教育学校": "circle", "高等専門学校": "circle", "短期大学": "circle", "大学": "circle", "幼稚園": "spade", "特別支援学校": "circle", "幼保連携型認定こども園": "club", "義務教育学校": "circle", "各種学校": "circle", "専修学校": "circle"};
 
     const myRenderer = L.canvas({ padding: 0.5 });
 
@@ -591,14 +780,24 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
         const size = document.getElementById('custom-text-size').value;
         const family = document.getElementById('custom-text-family').value;
         
-        const textIcon = L.divIcon({
-          html: `<div style="color:${currentSelectedColor}; font-size:${size}px; font-family:${family}; white-space:nowrap; font-weight:bold; transform: translate(-50%, -50%); text-align: center;">${text}</div>`,
-          className: 'custom-text-marker',
-          iconSize: [0, 0], iconAnchor: [0, 0] 
-        });
+        const marker = L.marker(e.latlng, {
+          icon: L.divIcon({
+            html: `<div style="color:${currentSelectedColor}; font-size:${Number(size)}px; font-family:${family}; white-space:nowrap; font-weight:bold; transform:translate(-50%, -50%); text-align:center;">${text}</div>`,
+            className: 'custom-text-marker',
+            iconSize: [0, 0],
+            iconAnchor: [0, 0]
+          })
+        }).addTo(map);
 
-        const marker = L.marker(e.latlng, { icon: textIcon }).addTo(map);
-        marker.pm.enable(); 
+        marker._mapTextData = {
+          text: text,
+          baseSize: Number(size),
+          family: family,
+          color: currentSelectedColor
+        };
+
+        updateTextMarkerScale(marker);
+        marker.pm.enable();
       } else {
         closeControlsPanel();
       }
@@ -607,54 +806,122 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     const CustomActionControl = L.Control.extend({
       options: { position: 'topright' },
       onAdd: function() {
-        const container = L.DomUtil.create('div', 'leaflet-bar');
-        container.style.marginTop = '1px';
-        
+        // 4つの操作アイコンを2×2で整列
+        // 上段：テキスト／カラーパレット
+        // 下段：画像の追加・編集／配置済み画像の選択
+        const container = L.DomUtil.create('div', 'leaflet-bar custom-action-grid');
+
         const textBtn = L.DomUtil.create('a', 'pm-text-btn', container);
         textBtn.innerHTML = 'Ｔ';
         textBtn.title = "テキストの追加";
-        textBtn.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px;";
-        textBtn.onclick = (e) => { e.preventDefault(); toggleTextMode(!isTextMode); };
+        textBtn.style.cssText =
+          "cursor:pointer; display:flex; align-items:center; justify-content:center; " +
+          "font-weight:bold; font-size:16px; line-height:30px;";
+        textBtn.onclick = (e) => {
+          e.preventDefault();
+          toggleTextMode(!isTextMode);
+        };
 
+        // テキストアイコンの右隣にカラーパレットを配置
         const colorBtnContainer = L.DomUtil.create('div', 'pm-color-picker-container', container);
-        colorBtnContainer.style.marginTop = '0px';
         const btn = L.DomUtil.create('div', 'pm-color-btn', colorBtnContainer);
         btn.innerHTML = '🎨';
         btn.title = "描画色の変更";
-        
+
         const input = L.DomUtil.create('input', '', btn);
         input.type = 'color';
         input.id = 'pm-color-input';
         input.value = currentSelectedColor;
         input.oninput = (e) => {
           currentSelectedColor = e.target.value;
-          map.pm.setPathOptions({ color: currentSelectedColor, fillColor: currentSelectedColor, fillOpacity: 0.3 });
+          map.pm.setPathOptions({
+            color: currentSelectedColor,
+            fillColor: currentSelectedColor,
+            fillOpacity: 0.3
+          });
           btn.style.borderBottom = `10px solid ${currentSelectedColor}`;
         };
 
+        // 下段：画像の追加・編集／配置済み画像の選択
         const imgBtn = L.DomUtil.create('a', 'pm-image-btn', container);
         imgBtn.innerHTML = '🖼️';
         imgBtn.title = "画像の追加・編集";
-        imgBtn.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px;";
-        imgBtn.onclick = (e) => { e.preventDefault(); toggleImageMode(); };
+        imgBtn.style.cssText =
+          "cursor:pointer; display:flex; align-items:center; justify-content:center; " +
+          "font-size:17px; line-height:30px;";
+        imgBtn.onclick = (e) => {
+          e.preventDefault();
+          toggleImageMode();
+        };
 
         const selBtn = L.DomUtil.create('a', 'pm-select-btn', container);
         selBtn.innerHTML = '👆';
         selBtn.title = "配置済み画像を選択";
-        selBtn.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px;";
-        selBtn.onclick = (e) => { e.preventDefault(); startImageSelectionMode(); };
+        selBtn.style.cssText =
+          "cursor:pointer; display:flex; align-items:center; justify-content:center; " +
+          "font-size:17px; line-height:30px;";
+        selBtn.onclick = (e) => {
+          e.preventDefault();
+          startImageSelectionMode();
+        };
 
         L.DomEvent.disableClickPropagation(container);
         return container;
       }
     });
+
     const customControl = new CustomActionControl();
     map.addControl(customControl);
     map.removeControl(customControl);
 
+    // ==========================================================
+    // 地図Zoom連動：テキスト・挿入画像
+    // ==========================================================
+    const CUSTOM_OVERLAY_BASE_ZOOM = 15;
+
+    function getCustomOverlayZoomScale() {
+        return Math.pow(2, map.getZoom() - CUSTOM_OVERLAY_BASE_ZOOM);
+    }
+
+    function updateTextMarkerScale(marker) {
+        if (!marker || !marker._mapTextData) return;
+        const data = marker._mapTextData;
+        const scale = getCustomOverlayZoomScale();
+        const fontSize = Math.max(1, data.baseSize * scale);
+
+        marker.setIcon(L.divIcon({
+            html: `<div style="color:${data.color}; font-size:${fontSize}px; font-family:${data.family}; white-space:nowrap; font-weight:bold; transform:translate(-50%, -50%); text-align:center;">${data.text}</div>`,
+            className: 'custom-text-marker',
+            iconSize: [0, 0],
+            iconAnchor: [0, 0]
+        }));
+    }
+
+    function updateImageMarkerScale(marker) {
+        if (!marker || !marker._mapImageData) return;
+        const data = marker._mapImageData;
+        const zoomScale = getCustomOverlayZoomScale();
+        const displayWidth = Math.max(1, data.baseWidth * zoomScale * data.userScale);
+
+        marker.setIcon(L.divIcon({
+            html: `<img src="${data.url}" style="width:${displayWidth}px; height:auto; display:block; transform:rotate(${data.rotation}deg); transform-origin:center center;" class="map-added-image">`,
+            className: 'image-marker-container',
+            iconSize: [displayWidth, displayWidth],
+            iconAnchor: [displayWidth / 2, displayWidth / 2]
+        }));
+    }
+
+    function updateCustomOverlayScales() {
+        map.eachLayer(layer => {
+            if (layer._mapTextData) updateTextMarkerScale(layer);
+            if (layer._mapImageData) updateImageMarkerScale(layer);
+        });
+    }
+
     function updateZoomIndicator() {
         const zoom = map.getZoom();
         document.getElementById('zoom-indicator').innerText = `Zoom: ${zoom.toFixed(1)}`;
+        updateCustomOverlayScales();
     }
     updateZoomIndicator();
     map.on('zoom', updateZoomIndicator);
@@ -2451,6 +2718,851 @@ fetch("geo_47_バス停留所.geojson")
 })
 .catch(e => {});
 
+fetch("geo_47_小学校.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["小学校"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["小学校"] || "circle";
+            const color = colorMap["緑"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：小学校<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 小学校", e));
+
+fetch("geo_47_中学校.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["中学校"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["中学校"] || "circle";
+            const color = colorMap["赤"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：中学校<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 中学校", e));
+
+fetch("geo_47_中等教育学校.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["中等教育学校"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["中等教育学校"] || "circle";
+            const color = colorMap["茶"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：中等教育学校<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 中等教育学校", e));
+
+fetch("geo_47_高校.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["高校"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["高校"] || "circle";
+            const color = colorMap["青"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：高校<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 高校", e));
+
+fetch("geo_47_高等専門学校.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["高等専門学校"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["高等専門学校"] || "circle";
+            const color = colorMap["茶"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：高等専門学校<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 高等専門学校", e));
+
+fetch("geo_47_短期大学.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["短期大学"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["短期大学"] || "circle";
+            const color = colorMap["茶"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：短期大学<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 短期大学", e));
+
+fetch("geo_47_大学.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["大学"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["大学"] || "circle";
+            const color = colorMap["茶"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：大学<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 大学", e));
+
+fetch("geo_47_幼稚園.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["幼稚園"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["幼稚園"] || "circle";
+            const color = colorMap["ピンク"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：幼稚園<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 幼稚園", e));
+
+fetch("geo_47_特別支援学校.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["特別支援学校"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["特別支援学校"] || "circle";
+            const color = colorMap["茶"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：特別支援学校<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 特別支援学校", e));
+
+fetch("geo_47_幼保連携型認定こども園.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["幼保連携型認定こども園"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["幼保連携型認定こども園"] || "circle";
+            const color = colorMap["オレンジ"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：幼保連携型認定こども園<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 幼保連携型認定こども園", e));
+
+fetch("geo_47_義務教育学校.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["義務教育学校"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["義務教育学校"] || "circle";
+            const color = colorMap["茶"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：義務教育学校<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 義務教育学校", e));
+
+fetch("geo_47_各種学校.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["各種学校"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["各種学校"] || "circle";
+            const color = colorMap["茶"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：各種学校<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 各種学校", e));
+
+fetch("geo_47_専修学校.geojson")
+.then(res => res.json())
+.then(data => {
+    facilityLayers["専修学校"] = L.geoJSON(data, {
+        pointToLayer: (f, latlng) => {
+            const shape = shapeMap["専修学校"] || "circle";
+            const color = colorMap["茶"] || "blue";
+            const markerRadius = (shape === 'star') ? 12 : 8;
+
+            // 学校GeoJSONの属性
+            // P29_003 = 学校分類コード
+            // P29_004 = 名称
+            // P29_005 = 所在地
+            // P29_006 = 管理者コード
+            // P29_007 = 休校コード
+            const schoolName = f.properties["P29_004"] || "-";
+            const schoolAddress = f.properties["P29_005"] || "-";
+            const managerCode = String(f.properties["P29_006"] ?? "").trim();
+            const closedCode = String(f.properties["P29_007"] ?? "").trim();
+
+            const managerMap = {
+                "1": "国",
+                "2": "都道府県",
+                "3": "市区町村",
+                "4": "民間",
+                "0": "その他"
+            };
+
+            const closedMap = {
+                "0": "調査なし",
+                "1": "開校中",
+                "9": "休校中"
+            };
+
+            const managerText = managerMap[managerCode] || (managerCode ? managerCode : "-");
+            const closedText = closedMap[closedCode] || (closedCode ? closedCode : "-");
+
+            const popupContent = `
+                <div style="line-height:1.6;">
+                    <strong style="font-size:15px;">${schoolName}</strong><br>
+                    学校種別：専修学校<br>
+                    所在地：${schoolAddress}<br>
+                    管理者分類：${managerText}<br>
+                    休校情報：${closedText}
+                </div>`;
+
+            return new L.CustomMarker(latlng, {
+                renderer: myRenderer, shape: shape, radius: markerRadius,
+                fillColor: color, color: "white", weight: 1, fillOpacity: 0.9
+            }).bindPopup(popupContent, { maxWidth: 360 });
+        },
+        onEachFeature: (f, l) => {
+            l.on('click', () => {
+                map.pm.disableDraw();
+                toggleTextMode(false);
+                if ('ontouchstart' in window) {
+                    document.getElementById('search-panel').style.display = 'none';
+                    document.getElementById('search-input').blur();
+                }
+            });
+        }
+    });
+})
+.catch(e => console.error("学校データ読込エラー: 専修学校", e));
+
     ['controls', 'search-panel', 'route-panel', 'text-config-panel', 'info-panel', 'hazard-legend'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -2496,6 +3608,22 @@ fetch("geo_47_バス停留所.geojson")
                     if (myRenderer && myRenderer._requestRedraw) {
                         myRenderer._requestRedraw();
                     }
+                }, 10);
+            } else {
+                map.removeLayer(g);
+            }
+        });
+    });
+
+    // ★学校専用のトグル処理
+    document.querySelectorAll('.school-toggle').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const g = facilityLayers[this.value];
+            if (!g) return;
+            if (this.checked) {
+                g.addTo(map);
+                setTimeout(() => {
+                    if (myRenderer && myRenderer._requestRedraw) myRenderer._requestRedraw();
                 }, 10);
             } else {
                 map.removeLayer(g);
@@ -2569,7 +3697,7 @@ fetch("geo_47_バス停留所.geojson")
             facilityLayers[label].eachLayer(l => {
                 const name = (l.feature?.properties?.["内容"] || "").toLowerCase();
                 if(keywords.every(kw => name.includes(kw))) {
-                    const cb = document.querySelector(`.facility-toggle[value="${label}"], .bus-toggle[value="${label}"]`);
+                    const cb = document.querySelector(`.facility-toggle[value="${label}"], .bus-toggle[value="${label}"], .school-toggle[value="${label}"]`);
                     if (cb && !cb.checked) { cb.checked = true; }
                     if (!map.hasLayer(l)) { l.addTo(map); }
                     if (l.getLatLng) bounds.push(l.getLatLng());
@@ -2686,39 +3814,52 @@ fetch("geo_47_バス停留所.geojson")
     function addImageToMap(url) {
         const container = map.getContainer();
         const width = container.offsetWidth;
-        const targetPoint = L.point(width - 250, 100); 
-        const targetLatLng = map.containerPointToLayerPoint(targetPoint);
-        const coords = map.layerPointToLatLng(targetLatLng);
-
-        const icon = L.divIcon({
-            html: `<img src="${url}" style="width:100px; transform: rotate(0deg) scale(1.0);" class="map-added-image">`,
-            className: 'image-marker-container',
-            iconSize: [100, 100],
-            iconAnchor: [50, 50]
-        });
+        const targetPoint = L.point(width - 250, 100);
+        const coords = map.containerPointToLatLng(targetPoint);
 
         const marker = L.marker(coords, { draggable: true }).addTo(map);
-        marker.setIcon(icon);
+
+        marker._mapImageData = {
+            url: url,
+            baseWidth: 100,
+            userScale: 1.0,
+            rotation: 0
+        };
+
+        updateImageMarkerScale(marker);
         setupImageEdit(marker);
     }
 
     function setupImageEdit(marker) {
-        if (currentImgMarker && currentImgMarker !== marker) finalizeImage(currentImgMarker);
-        currentImgMarker = marker;
-        const imgElement = marker.getElement().querySelector('img');
-        imgElement.classList.add('editing-image');
-        marker.dragging.enable();
-
         document.getElementById('image-config-panel').style.display = 'block';
 
+        if (marker._mapImageData) {
+            document.getElementById('img-rotate').value = marker._mapImageData.rotation;
+            document.getElementById('img-scale').value = marker._mapImageData.userScale;
+            document.getElementById('rot-val').innerText = marker._mapImageData.rotation;
+            document.getElementById('scale-val').innerText = marker._mapImageData.userScale;
+        }
+
         const update = () => {
-            const r = document.getElementById('img-rotate').value;
-            const s = document.getElementById('img-scale').value;
-            imgElement.style.transform = `rotate(${r}deg) scale(${s})`;
+            const r = Number(document.getElementById('img-rotate').value);
+            const s = Number(document.getElementById('img-scale').value);
+
+            if (!marker._mapImageData) {
+                marker._mapImageData = {
+                    url: imgElement ? imgElement.src : '',
+                    baseWidth: 100,
+                    userScale: 1.0,
+                    rotation: 0
+                };
+            }
+
+            marker._mapImageData.rotation = r;
+            marker._mapImageData.userScale = s;
+            updateImageMarkerScale(marker);
+
             document.getElementById('rot-val').innerText = r;
             document.getElementById('scale-val').innerText = s;
         };
-
         document.getElementById('img-rotate').oninput = update;
         document.getElementById('img-scale').oninput = update;
         document.getElementById('btn-img-confirm').onclick = () => finalizeImage(marker);
@@ -2751,6 +3892,466 @@ fetch("geo_47_バス停留所.geojson")
         if (currentImgMarker) finalizeImage(currentImgMarker);
         document.getElementById('image-config-panel').style.display = 'none';
     }
-  </script>
+  
+    // ==========================================================
+    // 防災マップ A4 / A3 分割印刷
+    // ==========================================================
+    let printPreviewMaps = [];
+
+    function togglePrintPanel() {
+        const p = document.getElementById('print-panel');
+        p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+        closeControlsPanel();
+    }
+
+    function getPrintGrid() {
+        const v = document.getElementById('print-grid-size').value.split('x');
+        return { cols: parseInt(v[0]), rows: parseInt(v[1]) };
+    }
+
+    function showPrintGrid() {
+        const overlay = document.getElementById('print-grid-overlay');
+        const data = getPrintBounds();
+
+        overlay.innerHTML = '';
+        overlay.style.display = 'block';
+
+        // 「分割印刷ページを作成」と全く同じ印刷範囲を使う。
+        // map.project() の座標を、現在の地図コンテナ上の座標へ変換する。
+        const mapContainer = map.getContainer();
+        const rect = mapContainer.getBoundingClientRect();
+        const mapSize = map.getSize();
+        const centerPixel = map.project(map.getCenter(), data.zoom);
+
+        function toScreenPoint(p) {
+            return {
+                x: rect.left + mapSize.x / 2 + (p.x - centerPixel.x),
+                y: rect.top  + mapSize.y / 2 + (p.y - centerPixel.y)
+            };
+        }
+
+        const swScreen = toScreenPoint(data.sw);
+        const neScreen = toScreenPoint(data.ne);
+
+        // 印刷範囲の外枠
+        const outer = document.createElement('div');
+        outer.style.position = 'absolute';
+        outer.style.left = `${Math.min(swScreen.x, neScreen.x)}px`;
+        outer.style.top = `${Math.min(swScreen.y, neScreen.y)}px`;
+        outer.style.width = `${Math.abs(neScreen.x - swScreen.x)}px`;
+        outer.style.height = `${Math.abs(neScreen.y - swScreen.y)}px`;
+        outer.style.border = '3px solid #ff0000';
+        outer.style.boxSizing = 'border-box';
+        outer.style.background = 'transparent';
+        overlay.appendChild(outer);
+
+        const totalW = Math.abs(neScreen.x - swScreen.x);
+        const totalH = Math.abs(neScreen.y - swScreen.y);
+        const left = Math.min(swScreen.x, neScreen.x);
+        const top = Math.min(swScreen.y, neScreen.y);
+
+        // 内部の分割線
+        for (let c = 1; c < data.cols; c++) {
+            const line = document.createElement('div');
+            line.className = 'print-grid-line';
+            line.style.left = `${left + totalW * c / data.cols}px`;
+            line.style.top = `${top}px`;
+            line.style.width = '3px';
+            line.style.height = `${totalH}px`;
+            overlay.appendChild(line);
+        }
+
+        for (let r = 1; r < data.rows; r++) {
+            const line = document.createElement('div');
+            line.className = 'print-grid-line';
+            line.style.left = `${left}px`;
+            line.style.top = `${top + totalH * r / data.rows}px`;
+            line.style.width = `${totalW}px`;
+            line.style.height = '3px';
+            overlay.appendChild(line);
+        }
+
+        // ページ番号
+        let n = 1;
+        for (let r = 0; r < data.rows; r++) {
+            for (let c = 0; c < data.cols; c++) {
+                const lab = document.createElement('div');
+                lab.className = 'print-grid-label';
+                lab.textContent = `${n} / ${data.cols * data.rows}`;
+                lab.style.left = `${left + totalW * c / data.cols + 7}px`;
+                lab.style.top = `${top + totalH * r / data.rows + 7}px`;
+                overlay.appendChild(lab);
+                n++;
+            }
+        }
+
+        const paperSize = document.getElementById('print-paper-size')?.value || 'A4';
+        const orientationText =
+            `${paperSize}${document.getElementById('print-orientation').value === 'portrait' ? '縦' : '横'}`;
+
+        alert(
+            `${orientationText}・${data.cols}×${data.rows} の実際の印刷範囲を表示しました。
+` +
+            `赤枠は「② 分割印刷ページを作成」と同じ範囲です。`
+        );
+    }
+
+    function closePrintGrid() {
+        const o=document.getElementById('print-grid-overlay');
+        if(o) o.style.display='none';
+    }
+
+    function cloneLayerForPrint(layer, targetMap) {
+        try {
+            if (layer instanceof L.TileLayer) {
+                return null; // タイルは後で現在の設定から複製
+            }
+
+            // ユーザーが地図上に追加したテキスト・画像を複製する。
+            // これらはGeoJSONではなくL.Marker(L.DivIcon)なので、
+            // toGeoJSON()だけでは文字や画像の内容が失われる。
+            if (layer instanceof L.Marker) {
+                const el = layer.getElement && layer.getElement();
+                const isCustomText = !!((el && el.classList && el.classList.contains('custom-text-marker')) || (el && el.querySelector && el.querySelector('.custom-text-marker')) || (layer.options && layer.options.icon && layer.options.icon.options && String(layer.options.icon.options.className || '').includes('custom-text-marker')));
+                const isCustomImage = !!(el && el.querySelector && el.querySelector('.map-added-image'));
+
+                if (isCustomText || isCustomImage) {
+                    const icon = layer.getIcon ? layer.getIcon() : null;
+                    if (!icon) return null;
+
+                    const opts = Object.assign({}, icon.options || {});
+                    // DOMから現在表示されているHTMLを取得。
+                    // これにより、画像の拡大縮小・回転やテキストの書式を保持する。
+                    opts.html = icon.options?.html || (el ? el.innerHTML : '');
+                    opts.className = icon.options?.className || '';
+                    opts.iconSize = icon.options?.iconSize || [0, 0];
+                    opts.iconAnchor = icon.options?.iconAnchor || [0, 0];
+
+                    const copy = L.marker(layer.getLatLng(), {
+                        icon: L.divIcon(opts),
+                        interactive: false,
+                        keyboard: false
+                    }).addTo(targetMap);
+
+                    return copy;
+                }
+
+                return null;
+            }
+
+            if (layer instanceof L.GeoJSON || layer instanceof L.FeatureGroup) {
+                // 施設・バス停などのカスタムマーカーは、GeoJSONを単純に
+                // circleMarkerへ変換すると元の鮮明な形・色・大きさが失われる。
+                // 元レイヤーの子レイヤーを直接複製して、CustomMarkerを保持する。
+                const group = L.featureGroup();
+
+                if (layer.eachLayer) {
+                    layer.eachLayer(src => {
+                        try {
+                            const ll = src.getLatLng ? src.getLatLng() : null;
+
+                            if (ll && src instanceof L.CustomMarker) {
+                                const o = Object.assign({}, src.options || {});
+                                // 元地図のRendererを共有せず、印刷用地図専用Rendererを使用
+                                o.renderer = targetMap.__printRenderer || L.canvas({ padding: 0.5 });
+                                const copy = new L.CustomMarker(ll, o);
+
+                                if (src.getPopup && src.getPopup()) {
+                                    copy.bindPopup(src.getPopup().getContent(), {
+                                        maxWidth: src.getPopup().options?.maxWidth || 260
+                                    });
+                                }
+                                group.addLayer(copy);
+                                return;
+                            }
+
+                            if (ll && src instanceof L.CircleMarker) {
+                                const o = Object.assign({}, src.options || {});
+                                group.addLayer(L.circleMarker(ll, o));
+                                return;
+                            }
+
+                            if (src instanceof L.Marker) {
+                                const icon = src.getIcon ? src.getIcon() : null;
+                                if (icon) {
+                                    const o = Object.assign({}, icon.options || {});
+                                    o.html = icon.options?.html || '';
+                                    group.addLayer(L.marker(ll, {
+                                        icon: L.divIcon(o),
+                                        interactive: false,
+                                        keyboard: false
+                                    }));
+                                }
+                                return;
+                            }
+
+                            if (src instanceof L.Polyline) {
+                                group.addLayer(L.polyline(src.getLatLngs(), Object.assign({}, src.options || {})));
+                                return;
+                            }
+
+                            if (src instanceof L.Polygon) {
+                                group.addLayer(L.polygon(src.getLatLngs(), Object.assign({}, src.options || {})));
+                                return;
+                            }
+                        } catch(e) {
+                            console.warn('個別レイヤー複製失敗', e);
+                        }
+                    });
+                }
+
+                if (group.getLayers().length) {
+                    return group.addTo(targetMap);
+                }
+
+                // 子レイヤーを取得できない場合の予備処理
+                const gj = layer.toGeoJSON ? layer.toGeoJSON() : null;
+                if (gj) {
+                    return L.geoJSON(gj, {
+                        pane: 'overlayPane',
+                        pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+                            radius: 5,
+                            color: '#3388ff',
+                            weight: 1,
+                            fillColor: '#3388ff',
+                            fillOpacity: 0.7
+                        }),
+                        style: () => ({
+                            color:'#3388ff', weight:1, fillOpacity:0.15
+                        })
+                    }).addTo(targetMap);
+                }
+            }
+        } catch(e) {
+            console.warn('印刷用レイヤー複製失敗', e);
+        }
+    }
+
+    function addPrintBaseLayer(targetMap) {
+        let selected = '標準';
+        const checked = document.querySelector('input[name="baseLayer"]:checked');
+        if (checked) selected = checked.value;
+        if (baseLayers[selected]) {
+            const options = Object.assign({}, baseLayers[selected].options || {});
+            delete options.attribution;
+            L.tileLayer(baseLayers[selected]._url, options).addTo(targetMap);
+        }
+        document.querySelectorAll('.hazard-toggle:checked').forEach(cb => {
+            const h = hazardLayers[cb.value];
+            if (h) {
+                const options = Object.assign({}, h.options || {});
+                delete options.attribution;
+                const layer = L.tileLayer(h._url, options);
+                layer.addTo(targetMap);
+            }
+        });
+    }
+
+    function getPrintBounds() {
+        // 「① 印刷範囲を表示」と「② 分割印刷ページを作成」が
+        // 必ず同じ境界を使用するための共通計算。
+        const {cols, rows} = getPrintGrid();
+        const orientation = document.getElementById('print-orientation').value;
+
+        // A4・A3とも縦横比は同じ（横：297/210、A3：420/297）
+        // したがって地図の分割範囲は用紙サイズによらず同じ比率で計算する。
+        const paperSize = document.getElementById('print-paper-size')?.value || 'A4';
+        const pageRatio = orientation === 'portrait'
+            ? 210 / 297
+            : 297 / 210;
+
+        // 3×3なら、ページ1枚の比率を3倍したものが全体の比率。
+        const totalRatio = (cols * pageRatio) / rows;
+
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        const size = map.getSize();
+
+        // 現在の地図画面内に収まる最大の「印刷全体範囲」を作る。
+        let totalW = size.y * totalRatio;
+        let totalH = size.y;
+
+        if (totalW > size.x) {
+            totalW = size.x;
+            totalH = totalW / totalRatio;
+        }
+
+        const centerPixel = map.project(center, zoom);
+
+        const sw = L.point(
+            centerPixel.x - totalW / 2,
+            centerPixel.y - totalH / 2
+        );
+        const ne = L.point(
+            centerPixel.x + totalW / 2,
+            centerPixel.y + totalH / 2
+        );
+
+        return {
+            sw,
+            ne,
+            zoom,
+            totalW,
+            totalH,
+            cols,
+            rows,
+            pageRatio,
+            orientation,
+            paperSize
+        };
+    }
+
+    async function createPosterPrint() {
+        // 「① 印刷範囲を表示」で表示した境界線は残す。
+        // 分割印刷ページの作成時にも、同じ範囲を確認できるようにする。
+        const data = getPrintBounds();
+        const preview = document.getElementById('print-preview');
+        const inner = document.getElementById('print-preview-inner');
+        inner.innerHTML = '';
+        printPreviewMaps.forEach(m => { try { m.remove(); } catch(e){} });
+        printPreviewMaps=[];
+
+        const pageW = data.pageRatio;
+        const totalPages = data.cols * data.rows;
+        const isA3 = data.paperSize === 'A3';
+        const isPortrait = data.orientation === 'portrait';
+        // 画面上のプレビュー用サイズ（A4=約96dpi基準、A3は1.414倍）
+        const pageCssW = isA3
+            ? (isPortrait ? 1122 : 1587)
+            : (isPortrait ? 793 : 1122);
+        const pageCssH = isA3
+            ? (isPortrait ? 1587 : 1122)
+            : (isPortrait ? 1122 : 793);
+
+        for(let r=0;r<data.rows;r++){
+            for(let c=0;c<data.cols;c++){
+                const pageNo = r*data.cols+c+1;
+                const page = document.createElement('div');
+                page.className = 'print-page'
+                    + (isPortrait ? ' portrait' : '')
+                    + (isA3 ? (isPortrait ? ' a3-portrait' : ' a3-landscape') : '');
+                page.style.aspectRatio = `${pageW}`;
+                const title=document.createElement('div');
+                title.className='print-page-title';
+                // ★【追加】本日の日付を取得し、月日を2桁に揃える
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const formattedDate = `${yyyy}/${mm}/${dd}`;
+                title.textContent=`作成日: ${formattedDate} Page:${pageNo} / ${totalPages}`;
+                page.appendChild(title);
+                const mapDiv=document.createElement('div');
+                mapDiv.className='print-page-map';
+                mapDiv.id=`poster-map-${pageNo}`;
+                page.appendChild(mapDiv);
+                inner.appendChild(page);
+
+                const x1=data.sw.x + (data.totalW/data.cols)*c;
+                const x2=data.sw.x + (data.totalW/data.cols)*(c+1);
+                const y1=data.sw.y + (data.totalH/data.rows)*r;
+                const y2=data.sw.y + (data.totalH/data.rows)*(r+1);
+                const mid=L.point((x1+x2)/2,(y1+y2)/2);
+
+                // 各A4ページが全体の1ページ分だけを表示するようズームを調整
+                const pagePixelW = data.totalW / data.cols;
+                const pagePixelH = data.totalH / data.rows;
+                const scaleX = pageCssW / pagePixelW;
+                const scaleY = pageCssH / pagePixelH;
+                const pageZoom = data.zoom + Math.log2(Math.min(scaleX, scaleY));
+
+                const pm=L.map(mapDiv,{
+                    center:map.unproject(mid,data.zoom),
+                    zoom:pageZoom,
+                    zoomSnap:0,
+                    zoomDelta:0.1,
+                    zoomControl:false,
+                    attributionControl:false,
+                    preferCanvas:true,
+                    dragging:false,
+                    scrollWheelZoom:false,
+                    doubleClickZoom:false,
+                    boxZoom:false,
+                    keyboard:false,
+                    touchZoom:false
+                });
+
+                // ★重要：印刷用地図では元地図の myRenderer を共有しない。
+                // CustomMarker は Canvas Renderer を使用しているため、
+                // 同じ Renderer を複数の Leaflet 地図で共有すると、
+                // 元の地図の病院・診療所等のマーカーが消えることがある。
+                // 印刷ページごとに専用Rendererを作成する。
+                pm.__printRenderer = L.canvas({ padding: 0.5 });
+
+                // ハザードタイルは元の地図で「hazardPane」を使用している。
+                // 印刷用Leaflet地図にも同じPaneを作らないと、
+                // 洪水・津波・高潮などのタイルを追加できない。
+                pm.createPane('hazardPane');
+                pm.getPane('hazardPane').style.zIndex = 300;
+                pm.getPane('hazardPane').style.pointerEvents = 'none';
+
+                addPrintBaseLayer(pm);
+
+                // 現在ONになっている施設・境界線を複製
+                document.querySelectorAll('.facility-toggle:checked,.bus-toggle:checked,.school-toggle:checked,.boundary-toggle:checked').forEach(cb=>{
+                    const layer=(facilityLayers[cb.value]||boundaryLayers[cb.value]);
+                    if(layer) cloneLayerForPrint(layer,pm);
+                });
+
+                // 現在地図上の描画物・ユーザー追加テキスト・画像を複製
+                map.eachLayer(layer=>{
+                    if(layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Circle){
+                        if(layer.options?.pane !== 'hazardPane' && layer.options?.pane !== 'boundaryPane'){
+                            try { L.geoJSON(layer.toGeoJSON()).addTo(pm); } catch(e){}
+                        }
+                    }
+
+                    // 「Ｔ」で追加したテキスト、および画像ツールで追加したJPG等を
+                    // 印刷用地図にも同じ緯度経度で配置する。
+                    if(layer instanceof L.Marker){
+                        try {
+                            const el = layer.getElement && layer.getElement();
+                            const isCustomText = !!((el && el.classList && el.classList.contains('custom-text-marker')) || (el && el.querySelector && el.querySelector('.custom-text-marker')) || (layer.options && layer.options.icon && layer.options.icon.options && String(layer.options.icon.options.className || '').includes('custom-text-marker')));
+                            const isCustomImage = !!(el && el.querySelector && el.querySelector('.map-added-image'));
+
+                            if(isCustomText || isCustomImage){
+                                cloneLayerForPrint(layer, pm);
+                            }
+                        } catch(e) {
+                            console.warn('テキスト・画像の印刷用複製失敗', e);
+                        }
+                    }
+                });
+
+                printPreviewMaps.push(pm);
+            }
+        }
+
+        preview.style.display='block';
+        setTimeout(()=>{
+            printPreviewMaps.forEach(m=>m.invalidateSize());
+        },500);
+
+        alert('印刷用ページを作成しました。\n地図タイルの読み込みが完了するまで少し待ってから、ブラウザの「印刷」を実行してください。\n実際のサイズ（倍率100%）を選択してください。');
+    }
+
+    function closePrintPreview() {
+        // 印刷画面を閉じて元の地図へ戻る際は、
+        // 「① 印刷範囲を表示」で出した赤い境界線も必ず消す。
+        const preview = document.getElementById('print-preview');
+        if (preview) preview.style.display='none';
+
+        printPreviewMaps.forEach(m=>{try{m.remove();}catch(e){}});
+        printPreviewMaps=[];
+
+        // 元の地図を通常表示へ戻す。
+        closePrintGrid();
+
+        // 印刷パネルも閉じて、元の地図をそのまま操作できる状態にする。
+        const panel = document.getElementById('print-panel');
+        if (panel) panel.style.display='none';
+    }
+
+</script>
 </body>
 </html>
