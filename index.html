@@ -13,8 +13,10 @@
 <meta charset="utf-8">
 <title>医療・介護施設マップ</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- セキュリティ対策：不要な外部接続を制限。既存のインラインJavaScript／onclickを維持するため unsafe-inline は残しています。 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https://unpkg.com https://*.gsi.go.jp https://*.openstreetmap.org https://hmc48.github.io; connect-src 'self' https://unpkg.com https://*.gsi.go.jp https://*.openstreetmap.org https://router.project-osrm.org https://nominatim.openstreetmap.org https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css">
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.css">
 <style>
 body { margin:0; padding:0; overflow:hidden; font-family: sans-serif; }
 #map { height:100vh; width:100vw; z-index:1; }
@@ -235,12 +237,30 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
   top: 290px; right: 15px; background:#198754; color:white;
 }
 #print-panel {
-  display:none; position:fixed; top:55px; right:65px; width:260px;
+  display:none; position:fixed; top:55px; right:65px;
+  width:260px; max-width:calc(100vw - 90px);
+  max-height:calc(100vh - 75px); max-height:calc(100dvh - 75px);
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
   background:white; padding:12px; border-radius:8px; z-index:6000;
   box-shadow:0 4px 15px rgba(0,0,0,0.25); font-size:13px;
+  box-sizing:border-box;
 }
 #print-panel select, #print-panel button {
-  width:100%; box-sizing:border-box; padding:7px; margin-top:6px;
+  width:100%; min-height:40px; box-sizing:border-box;
+  padding:7px; margin-top:6px; font-size:16px;
+  touch-action:manipulation;
+}
+#print-panel label { display:block; min-width:0; font-size:13px; }
+#print-panel .print-grid-selects {
+  display:flex; gap:8px; align-items:flex-start; margin-top:6px;
+}
+#print-panel .print-grid-selects label { flex:1; }
+@media (max-width: 700px) {
+  #print-panel {
+    top:55px; right:58px;
+    max-height:calc(100vh - 70px); max-height:calc(100dvh - 70px);
+    padding:10px;
+  }
 }
 #print-grid-overlay {
   display:none; position:fixed; left:0; top:0; width:100vw; height:100vh;
@@ -256,8 +276,27 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
 #print-preview {
   display:none; position:fixed; inset:0; z-index:10000; background:#777;
   overflow:auto; padding:20px; box-sizing:border-box;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
+  overscroll-behavior:contain;
 }
 #print-preview-inner { display:flex; flex-direction:column; align-items:center; gap:18px; }
+/* 画面表示用の外枠。印刷ページ本体の寸法には影響させない */
+.print-page-wrap {
+  flex:0 0 auto; position:relative; margin:0 auto;
+}
+#print-preview-tools {
+  position:fixed; top:12px; left:50%; transform:translateX(-50%);
+  z-index:11000; display:flex; align-items:center; gap:6px;
+  padding:6px 8px; border-radius:8px; background:rgba(30,30,30,.92);
+  box-shadow:0 2px 8px rgba(0,0,0,.3); white-space:nowrap;
+}
+#print-preview-tools button {
+  min-width:42px; min-height:38px; padding:6px 10px; border:0;
+  border-radius:5px; background:#fff; color:#222; font-size:15px;
+  touch-action:manipulation;
+}
+#print-preview-zoom-label { color:white; font-size:12px; min-width:42px; text-align:center; }
 .print-page {
   width:1122px; height:793px; background:white; position:relative;
   box-sizing:border-box; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.35);
@@ -271,11 +310,36 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
 .print-page.a3-portrait { width:1122px; height:1587px; }
 .print-page-map { position:absolute; left:0; right:0; top:0; bottom:0; }
 .print-close {
-  position:fixed; right:20px; top:15px; z-index:11000; padding:8px 14px;
+  position:fixed; right:20px; top:15px; z-index:11001; padding:8px 14px;
   background:#dc3545; color:white; border:0; border-radius:5px; cursor:pointer;
   font-size:14px;
 }
+
+.print-index-number {
+   background: transparent;
+   border: none;
+   color: #c00000;
+   font-weight: bold;
+   font-size: 20px;
+   text-align: center;
+   line-height: 34px;
+ }
+ .print-index-number span {
+   display: inline-block;
+   min-width: 26px;
+   padding: 0 3px;
+   background: rgba(255,255,255,.88);
+   border: 1px solid #c00000;
+   border-radius: 3px;
+   box-sizing: border-box;
+ }
 .print-help { font-size:11px; color:#555; line-height:1.45; margin-top:6px; }
+@media (max-width: 700px) {
+  #print-preview { padding:64px 8px 18px; -webkit-overflow-scrolling:touch; }
+  #print-preview-tools { top:8px; gap:4px; padding:5px; }
+  #print-preview-tools button { min-width:38px; min-height:38px; padding:5px 8px; }
+  .print-close { top:8px; right:8px; padding:7px 10px; }
+}
 @media print {
   @page A4Landscape { size: A4 landscape; margin: 0; }
   @page A4Portrait { size: A4 portrait; margin: 0; }
@@ -284,8 +348,15 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
   body > *:not(#print-preview) { display:none !important; }
   #print-preview { display:block !important; position:static; padding:0; background:white; overflow:visible; }
   #print-preview-inner { display:block; }
+  #print-preview-tools { display:none !important; }
+  .print-page-wrap {
+    width:auto !important; height:auto !important; margin:0 !important;
+    transform:none !important; page-break-after:always; break-after:page;
+  }
+  .print-page-wrap:last-child { page-break-after:auto; break-after:page; }
+  .print-page { transform:none !important; position:relative !important; left:auto !important; top:auto !important; }
   .print-page {
-    width:297mm; height:210mm; margin:0; box-shadow:none; page-break-after:always; page:A4Landscape;
+    width:297mm; height:210mm; margin:0; box-shadow:none; page-break-after:auto; page:A4Landscape;
   }
   .print-page.portrait {
     width:210mm; height:297mm; page:A4Portrait;
@@ -468,21 +539,25 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
   
   <div id="route-btn" class="circle-btn right-tool" title="経路検索" onclick="toggleRouteMode()">🚗</div>
   <div id="reload-btn" class="circle-btn right-tool" title="初期化" onclick="confirmReload()">↩️</div>
-  <div id="print-map-btn" class="circle-btn right-tool" title="防災マップ印刷" onclick="togglePrintPanel()">🖨️</div>
+  <div id="print-map-btn" class="circle-btn right-tool" title="マップ印刷" onclick="togglePrintPanel()">🖨️</div>
   <div id="print-panel">
     <span class="close-x" onclick="togglePrintPanel()">×</span>
-    <div class="section-title">防災マップ印刷</div>
+    <div class="section-title">マップ印刷</div>
     <div style="margin-top:8px;">用紙サイズ</div>
     <select id="print-paper-size">
       <option value="A4" selected>A4</option>
       <option value="A3">A3</option>
     </select>
-    <div style="margin-top:8px;">分割数</div>
-    <select id="print-grid-size">
-      <option value="2x2">2×2（4枚）</option>
-      <option value="3x3" selected>3×3（9枚）</option>
-      <option value="4x4">4×4（16枚）</option>
-    </select>
+    <div style="margin-top:8px;">分割数（縦・横それぞれ1～30）</div>
+    <div class="print-grid-selects">
+      <label>縦（行）
+        <select id="print-grid-rows"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option></select>
+      </label>
+      <label>横（列）
+        <select id="print-grid-cols"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option></select>
+      </label>
+    </div>
+    <div id="print-grid-count" style="margin-top:5px; font-weight:bold;">合計：9枚</div>
     <div style="margin-top:8px;">用紙方向</div>
     <select id="print-orientation">
       <option value="landscape" selected>横</option>
@@ -492,11 +567,19 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     <button onclick="createPosterPrint()" style="background:#0d6efd;color:white;border:0;">② 分割印刷ページを作成</button>
     <div class="print-help">
       現在の地図範囲を基準に、選択した用紙サイズのページへ分割します。<br>
-      先に地図を移動・拡大縮小して、印刷したい範囲を表示してください。<br>      「②」を押すと選択した枚数の印刷ページが表示されます。
+      地図を移動・拡大縮小して、印刷したい範囲を調整してください。<br>
+      「②」を押すと入力した縦×横の枚数分、印刷プレビューが表示されます。<br>
+      表示後、各ブラウザの印刷機能でPDF化や紙に印刷します。
     </div>
   </div>
   <div id="print-grid-overlay"></div>
   <div id="print-preview">
+    <div id="print-preview-tools">
+      <button type="button" onclick="changePrintPreviewZoom(-0.15)" aria-label="縮小">－</button>
+      <span id="print-preview-zoom-label">100%</span>
+      <button type="button" onclick="changePrintPreviewZoom(0.15)" aria-label="拡大">＋</button>
+      <button type="button" onclick="fitPrintPreviewWidth()">幅に合わせる</button>
+    </div>
     <button class="print-close" onclick="closePrintPreview()">閉じる</button>
     <div id="print-preview-inner"></div>
   </div>
@@ -522,7 +605,7 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     <span style="color:green;">♠</span>薬局
     <span style="color:red;">■</span>助産院
     <span style="color:brown;">●</span>介護
-    <span style="color:orange;">　▲</span>バス停 （OpenStreetMap 2026/09データ）<br>
+    <span style="color:orange;"> ▲</span>バス停 （OpenStreetMap 2026/09データ）<br>
     【学校関係】（国土地理院・国土交通省 2023年度版）<br>
     <span style="color:green;">★</span>小学校
     <span style="color:red;">♥</span>中学校
@@ -550,14 +633,13 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     <span style="background-color: #fd63db; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🏠</span> ホーム<br>
     <span style="background-color: blue; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🛠️</span> 設定 地図種類変更、医療圏境界線表示<br>
       施設選択（各ページへリンク）<br>
-      人口表示（境界線初期表示時）<br>
     <span style="background-color: green; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🔍</span> 検索機能(and検索)<br>
       and検索の例:内科 秋葉原 診療所<br>
       人口表示（境界線表示時）<br>
     <span style="background-color: orange; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">📍</span> 住所検索(and検索)<br>
     <span style="background-color: blue; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🚗</span> 経路探索（自動車、徒歩）<br>
     <span style="background-color: gray; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">↩️</span> 初期化<br>
-    <span style="background-color: gray; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🖨️</span> 防災マップ印刷（分割印刷A4/A3 Max 4×4（16枚））<br> 
+    <span style="background-color: gray; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🖨️</span> マップ印刷（分割印刷A4/A3 最大30×30（900枚））<br> 
     <span style="background-color: gray; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">✏️</span> 線、四角形、多角形、円の描写、テキスト入力<br>
     <span style="background-color: yellow; border-radius: 50%; padding: 10px; display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px;">🖼️</span> 任意の画像、イラストの挿入<br>
     【利用規約・ご意見・ご感想・お問い合わせ】<br>
@@ -569,7 +651,7 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
+  <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.min.js"></script>
   <script>
     const colorMap = {"赤": "red", "青": "blue", "オレンジ": "orange", "ピンク": "deeppink", "緑": "green", "茶": "brown", "黄": "yellow"};
     const shapeMap = {"病院": "star", "診療所": "heart", "歯科": "club", "助産院": "square", "薬局": "spade", "バス停留所": "triangle", "小学校": "star", "中学校": "heart", "高校": "square", "中等教育学校": "circle", "高等専門学校": "circle", "短期大学": "circle", "大学": "circle", "幼稚園": "spade", "特別支援学校": "circle", "幼保連携型認定こども園": "club", "義務教育学校": "circle", "各種学校": "circle", "専修学校": "circle"};
@@ -652,6 +734,12 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
 
     map.pm.addControls({ position: 'topright' });
     map.pm.removeControls();
+
+    map.on('pm:create', function(e) {
+        if (e && e.layer instanceof L.Marker) {
+            e.layer._isUserDrawingMarker = true;
+        }
+    });
 
     let currentSelectedColor = "#3388ff";
     let isTextMode = false;
@@ -806,9 +894,6 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
     const CustomActionControl = L.Control.extend({
       options: { position: 'topright' },
       onAdd: function() {
-        // 4つの操作アイコンを2×2で整列
-        // 上段：テキスト／カラーパレット
-        // 下段：画像の追加・編集／配置済み画像の選択
         const container = L.DomUtil.create('div', 'leaflet-bar custom-action-grid');
 
         const textBtn = L.DomUtil.create('a', 'pm-text-btn', container);
@@ -822,7 +907,6 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
           toggleTextMode(!isTextMode);
         };
 
-        // テキストアイコンの右隣にカラーパレットを配置
         const colorBtnContainer = L.DomUtil.create('div', 'pm-color-picker-container', container);
         const btn = L.DomUtil.create('div', 'pm-color-btn', colorBtnContainer);
         btn.innerHTML = '🎨';
@@ -842,7 +926,6 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
           btn.style.borderBottom = `10px solid ${currentSelectedColor}`;
         };
 
-        // 下段：画像の追加・編集／配置済み画像の選択
         const imgBtn = L.DomUtil.create('a', 'pm-image-btn', container);
         imgBtn.innerHTML = '🖼️';
         imgBtn.title = "画像の追加・編集";
@@ -1138,12 +1221,20 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
         }
     }    
 
+    const CHOME_BOUNDARY_STYLE = {
+        color: "red",
+        weight: 2,
+        opacity: 1.0,
+        fillColor: "#ff69b4",
+        fillOpacity: 0
+    };
+
     function loadChome(idx) {
       fetch(`geo_0_町丁目境界${idx}.geojson`)
         .then(res => res.json())
         .then(data => {
           boundaryLayers[`町丁目境界${idx}`] = L.geoJSON(data, {
-            style: { color: "red", weight: 1, fillOpacity: 0.03 },
+            style: () => Object.assign({}, CHOME_BOUNDARY_STYLE),
             onEachFeature: (f, l) => {
               const content = `<strong>${f.properties["町丁目名"]}</strong><br>人口：${f.properties["JINKO"] ?? "不明"}`;
               if (!('ontouchstart' in window)) {
@@ -1151,8 +1242,11 @@ button.menu-sub-btn { flex: 1; padding: 8px; font-size: 11px; cursor: pointer; }
               }
               l.bindPopup(content);
               l.on({
-                mouseover: e => e.target.setStyle({ weight: 3, color: "#ff0000", fillOpacity: 0.15 }),
-                mouseout: e => e.target.setStyle({ weight: 1, color: "red", fillOpacity: 0.03 }),
+                mouseover: e => e.target.setStyle({
+                    color: "#e60073", weight: 2.5,
+                    fillColor: "#ff69b4", fillOpacity: 0.15
+                }),
+                mouseout: e => e.target.setStyle(Object.assign({}, CHOME_BOUNDARY_STYLE))
               });
             }
           });
@@ -2727,12 +2821,6 @@ fetch("geo_47_小学校.geojson")
             const color = colorMap["緑"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -2792,12 +2880,6 @@ fetch("geo_47_中学校.geojson")
             const color = colorMap["赤"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -2857,12 +2939,6 @@ fetch("geo_47_中等教育学校.geojson")
             const color = colorMap["茶"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -2922,12 +2998,6 @@ fetch("geo_47_高校.geojson")
             const color = colorMap["青"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -2987,12 +3057,6 @@ fetch("geo_47_高等専門学校.geojson")
             const color = colorMap["茶"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -3052,12 +3116,6 @@ fetch("geo_47_短期大学.geojson")
             const color = colorMap["茶"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -3117,12 +3175,6 @@ fetch("geo_47_大学.geojson")
             const color = colorMap["茶"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -3182,12 +3234,6 @@ fetch("geo_47_幼稚園.geojson")
             const color = colorMap["ピンク"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -3247,12 +3293,6 @@ fetch("geo_47_特別支援学校.geojson")
             const color = colorMap["茶"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -3312,12 +3352,6 @@ fetch("geo_47_幼保連携型認定こども園.geojson")
             const color = colorMap["オレンジ"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -3377,12 +3411,6 @@ fetch("geo_47_義務教育学校.geojson")
             const color = colorMap["茶"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -3442,12 +3470,6 @@ fetch("geo_47_各種学校.geojson")
             const color = colorMap["茶"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -3507,12 +3529,6 @@ fetch("geo_47_専修学校.geojson")
             const color = colorMap["茶"] || "blue";
             const markerRadius = (shape === 'star') ? 12 : 8;
 
-            // 学校GeoJSONの属性
-            // P29_003 = 学校分類コード
-            // P29_004 = 名称
-            // P29_005 = 所在地
-            // P29_006 = 管理者コード
-            // P29_007 = 休校コード
             const schoolName = f.properties["P29_004"] || "-";
             const schoolAddress = f.properties["P29_005"] || "-";
             const managerCode = String(f.properties["P29_006"] ?? "").trim();
@@ -3597,7 +3613,6 @@ fetch("geo_47_専修学校.geojson")
         });
     });
 
-    // ★ バス停留所専用のトグル処理
     document.querySelectorAll('.bus-toggle').forEach(cb => {
         cb.addEventListener('change', function() {
             const g = facilityLayers[this.value];
@@ -3615,7 +3630,6 @@ fetch("geo_47_専修学校.geojson")
         });
     });
 
-    // ★学校専用のトグル処理
     document.querySelectorAll('.school-toggle').forEach(cb => {
         cb.addEventListener('change', function() {
             const g = facilityLayers[this.value];
@@ -3631,7 +3645,6 @@ fetch("geo_47_専修学校.geojson")
         });
     });
 
-    // 施設種類（バス停留所を除く）のトグル処理
     document.querySelectorAll('.facility-toggle').forEach(cb => {
         cb.addEventListener('change', function() {
             const g = facilityLayers[this.value];
@@ -3898,6 +3911,16 @@ fetch("geo_47_専修学校.geojson")
     // ==========================================================
     let printPreviewMaps = [];
 
+    function getCurrentMapKindCreditText() {
+        const creditEl = document.getElementById('credit-title');
+        const domText = (creditEl ? creditEl.textContent : '').trim();
+        if (domText) return domText;
+
+        const checked = document.querySelector('input[name="baseLayer"]:checked');
+        const layerKey = checked ? checked.value : '標準';
+        return creditText[layerKey] || '© OpenStreetMap';
+    }
+
     function togglePrintPanel() {
         const p = document.getElementById('print-panel');
         p.style.display = (p.style.display === 'block') ? 'none' : 'block';
@@ -3905,19 +3928,45 @@ fetch("geo_47_専修学校.geojson")
     }
 
     function getPrintGrid() {
-        const v = document.getElementById('print-grid-size').value.split('x');
-        return { cols: parseInt(v[0]), rows: parseInt(v[1]) };
+        const rowsInput = document.getElementById('print-grid-rows');
+        const colsInput = document.getElementById('print-grid-cols');
+        const rows = Number(rowsInput.value);
+        const cols = Number(colsInput.value);
+        if (!Number.isInteger(rows) || rows < 1 || rows > 30 ||
+            !Number.isInteger(cols) || cols < 1 || cols > 30) {
+            alert('縦・横の分割数は、それぞれ1～30の整数で入力してください。');
+            return null;
+        }
+        return { cols, rows };
     }
+
+    function updatePrintGridCount() {
+        const rows = Number(document.getElementById('print-grid-rows').value);
+        const cols = Number(document.getElementById('print-grid-cols').value);
+        const label = document.getElementById('print-grid-count');
+        if (Number.isInteger(rows) && rows >= 1 && rows <= 30 &&
+            Number.isInteger(cols) && cols >= 1 && cols <= 30) {
+            const total = rows * cols;
+            label.textContent = `合計：${total}枚`;
+            label.style.color = total >= 50 ? '#c00' : '';
+        } else {
+            label.textContent = '縦・横は1～30の整数で入力してください';
+            label.style.color = '#c00';
+        }
+    }
+    document.getElementById('print-grid-rows').addEventListener('change', updatePrintGridCount);
+    document.getElementById('print-grid-cols').addEventListener('change', updatePrintGridCount);
+    updatePrintGridCount();
 
     function showPrintGrid() {
         const overlay = document.getElementById('print-grid-overlay');
+        const grid = getPrintGrid();
+        if (!grid) return;
         const data = getPrintBounds();
 
         overlay.innerHTML = '';
         overlay.style.display = 'block';
 
-        // 「分割印刷ページを作成」と全く同じ印刷範囲を使う。
-        // map.project() の座標を、現在の地図コンテナ上の座標へ変換する。
         const mapContainer = map.getContainer();
         const rect = mapContainer.getBoundingClientRect();
         const mapSize = map.getSize();
@@ -3933,7 +3982,6 @@ fetch("geo_47_専修学校.geojson")
         const swScreen = toScreenPoint(data.sw);
         const neScreen = toScreenPoint(data.ne);
 
-        // 印刷範囲の外枠
         const outer = document.createElement('div');
         outer.style.position = 'absolute';
         outer.style.left = `${Math.min(swScreen.x, neScreen.x)}px`;
@@ -3950,7 +3998,6 @@ fetch("geo_47_専修学校.geojson")
         const left = Math.min(swScreen.x, neScreen.x);
         const top = Math.min(swScreen.y, neScreen.y);
 
-        // 内部の分割線
         for (let c = 1; c < data.cols; c++) {
             const line = document.createElement('div');
             line.className = 'print-grid-line';
@@ -3971,7 +4018,6 @@ fetch("geo_47_専修学校.geojson")
             overlay.appendChild(line);
         }
 
-        // ページ番号
         let n = 1;
         for (let r = 0; r < data.rows; r++) {
             for (let c = 0; c < data.cols; c++) {
@@ -3990,7 +4036,7 @@ fetch("geo_47_専修学校.geojson")
             `${paperSize}${document.getElementById('print-orientation').value === 'portrait' ? '縦' : '横'}`;
 
         alert(
-            `${orientationText}・${data.cols}×${data.rows} の実際の印刷範囲を表示しました。
+            `${orientationText}・${data.rows}×${data.cols} の実際の印刷範囲を表示しました。
 ` +
             `赤枠は「② 分割印刷ページを作成」と同じ範囲です。`
         );
@@ -4001,48 +4047,134 @@ fetch("geo_47_専修学校.geojson")
         if(o) o.style.display='none';
     }
 
-    function cloneLayerForPrint(layer, targetMap) {
+    function isBoundaryLayerChild(candidate) {
+        let found = false;
+        Object.values(boundaryLayers).forEach(group => {
+            if (!group || !group.eachLayer || found) return;
+            group.eachLayer(child => {
+                if (child === candidate) found = true;
+            });
+        });
+        return found;
+    }
+
+    function cloneCustomMarkerSingle(src, targetMap) {
+        try {
+            if (!src || !(src instanceof L.CustomMarker) || !src.getLatLng) return null;
+            const o = Object.assign({}, src.options || {});
+            o.renderer = targetMap.__printRenderer || L.canvas({ padding: 0.5 });
+            const copy = new L.CustomMarker(src.getLatLng(), o);
+            if (src.getPopup && src.getPopup()) {
+                copy.bindPopup(src.getPopup().getContent(), {
+                    maxWidth: src.getPopup().options?.maxWidth || 260
+                });
+            }
+            return copy.addTo(targetMap);
+        } catch (e) {
+            console.warn('単体CustomMarker複製失敗', e);
+            return null;
+        }
+    }
+
+    function cloneStandaloneCustomMarkers(targetMap) {
+        const seenLatLngKeys = new Set();
+        const renderer = targetMap.__printRenderer || L.canvas({ padding: 0.5 });
+        if (renderer._layers) {
+            Object.values(renderer._layers).forEach(l => {
+                if (l instanceof L.CustomMarker && l.getLatLng) {
+                    const ll = l.getLatLng();
+                    seenLatLngKeys.add(`${ll.lat.toFixed(7)},${ll.lng.toFixed(7)},${l.options?.shape || ''},${l.options?.fillColor || ''}`);
+                }
+            });
+        }
+
+        map.eachLayer(layer => {
+            if (layer instanceof L.CustomMarker && layer.getLatLng) {
+                const ll = layer.getLatLng();
+                const key = `${ll.lat.toFixed(7)},${ll.lng.toFixed(7)},${layer.options?.shape || ''},${layer.options?.fillColor || ''}`;
+                if (!seenLatLngKeys.has(key)) {
+                    seenLatLngKeys.add(key);
+                    cloneCustomMarkerSingle(layer, targetMap);
+                }
+            }
+        });
+    }
+
+    function cloneDrawnShapeToPrintMap(layer, targetMap) {
+        if (layer instanceof L.Circle) {
+            const opts = Object.assign({}, layer.options || {}, {
+                radius: layer.getRadius()
+            });
+            delete opts.renderer;
+            L.circle(layer.getLatLng(), opts).addTo(targetMap);
+            return;
+        }
+        if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
+            if (layer.options?.pane !== 'hazardPane' && layer.options?.pane !== 'boundaryPane') {
+                try { L.geoJSON(layer.toGeoJSON()).addTo(targetMap); } catch(e) {}
+            }
+        }
+    }
+
+    function cloneLayerForPrint(layer, targetMap, styleOverride = null) {
         try {
             if (layer instanceof L.TileLayer) {
-                return null; // タイルは後で現在の設定から複製
+                return null;
             }
 
-            // ユーザーが地図上に追加したテキスト・画像を複製する。
-            // これらはGeoJSONではなくL.Marker(L.DivIcon)なので、
-            // toGeoJSON()だけでは文字や画像の内容が失われる。
+            if (layer instanceof L.CustomMarker) {
+                return cloneCustomMarkerSingle(layer, targetMap);
+            }
+
             if (layer instanceof L.Marker) {
                 const el = layer.getElement && layer.getElement();
                 const isCustomText = !!((el && el.classList && el.classList.contains('custom-text-marker')) || (el && el.querySelector && el.querySelector('.custom-text-marker')) || (layer.options && layer.options.icon && layer.options.icon.options && String(layer.options.icon.options.className || '').includes('custom-text-marker')));
                 const isCustomImage = !!(el && el.querySelector && el.querySelector('.map-added-image'));
 
+                const icon = layer.getIcon ? layer.getIcon() : null;
+
                 if (isCustomText || isCustomImage) {
-                    const icon = layer.getIcon ? layer.getIcon() : null;
                     if (!icon) return null;
 
                     const opts = Object.assign({}, icon.options || {});
-                    // DOMから現在表示されているHTMLを取得。
-                    // これにより、画像の拡大縮小・回転やテキストの書式を保持する。
                     opts.html = icon.options?.html || (el ? el.innerHTML : '');
                     opts.className = icon.options?.className || '';
                     opts.iconSize = icon.options?.iconSize || [0, 0];
                     opts.iconAnchor = icon.options?.iconAnchor || [0, 0];
 
-                    const copy = L.marker(layer.getLatLng(), {
+                    return L.marker(layer.getLatLng(), {
                         icon: L.divIcon(opts),
                         interactive: false,
                         keyboard: false
                     }).addTo(targetMap);
+                }
 
-                    return copy;
+                if (!(Array.isArray(routeMarkers) && routeMarkers.includes(layer))) {
+                    const printIcon = L.icon({
+                        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41],
+                        className: 'leaflet-marker-icon'
+                    });
+
+                    return L.marker(layer.getLatLng(), {
+                        icon: printIcon,
+                        opacity: layer.options?.opacity ?? 1,
+                        zIndexOffset: layer.options?.zIndexOffset ?? 0,
+                        draggable: false,
+                        interactive: false,
+                        keyboard: false
+                    }).addTo(targetMap);
                 }
 
                 return null;
             }
 
             if (layer instanceof L.GeoJSON || layer instanceof L.FeatureGroup) {
-                // 施設・バス停などのカスタムマーカーは、GeoJSONを単純に
-                // circleMarkerへ変換すると元の鮮明な形・色・大きさが失われる。
-                // 元レイヤーの子レイヤーを直接複製して、CustomMarkerを保持する。
                 const group = L.featureGroup();
 
                 if (layer.eachLayer) {
@@ -4052,7 +4184,6 @@ fetch("geo_47_専修学校.geojson")
 
                             if (ll && src instanceof L.CustomMarker) {
                                 const o = Object.assign({}, src.options || {});
-                                // 元地図のRendererを共有せず、印刷用地図専用Rendererを使用
                                 o.renderer = targetMap.__printRenderer || L.canvas({ padding: 0.5 });
                                 const copy = new L.CustomMarker(ll, o);
 
@@ -4065,6 +4196,15 @@ fetch("geo_47_専修学校.geojson")
                                 return;
                             }
 
+                            if (ll && src instanceof L.Circle) {
+                                const o = Object.assign({}, src.options || {}, {
+                                    radius: src.getRadius()
+                                });
+                                delete o.renderer;
+                                group.addLayer(L.circle(ll, o));
+                                return;
+                            }
+
                             if (ll && src instanceof L.CircleMarker) {
                                 const o = Object.assign({}, src.options || {});
                                 group.addLayer(L.circleMarker(ll, o));
@@ -4072,26 +4212,39 @@ fetch("geo_47_専修学校.geojson")
                             }
 
                             if (src instanceof L.Marker) {
-                                const icon = src.getIcon ? src.getIcon() : null;
-                                if (icon) {
-                                    const o = Object.assign({}, icon.options || {});
-                                    o.html = icon.options?.html || '';
-                                    group.addLayer(L.marker(ll, {
-                                        icon: L.divIcon(o),
-                                        interactive: false,
-                                        keyboard: false
-                                    }));
-                                }
-                                return;
-                            }
-
-                            if (src instanceof L.Polyline) {
-                                group.addLayer(L.polyline(src.getLatLngs(), Object.assign({}, src.options || {})));
+                                const copiedIcon = L.icon({
+                                    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                                    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                                    iconSize: [25, 41],
+                                    iconAnchor: [12, 41],
+                                    popupAnchor: [1, -34],
+                                    shadowSize: [41, 41],
+                                    className: 'leaflet-marker-icon'
+                                });
+                                group.addLayer(L.marker(ll, {
+                                    icon: copiedIcon,
+                                    opacity: src.options?.opacity ?? 1,
+                                    zIndexOffset: src.options?.zIndexOffset ?? 0,
+                                    interactive: false,
+                                    keyboard: false
+                                }));
                                 return;
                             }
 
                             if (src instanceof L.Polygon) {
-                                group.addLayer(L.polygon(src.getLatLngs(), Object.assign({}, src.options || {})));
+                                group.addLayer(L.polygon(
+                                    src.getLatLngs(),
+                                    Object.assign({}, src.options || {}, styleOverride || {})
+                                ));
+                                return;
+                            }
+
+                            if (src instanceof L.Polyline) {
+                                group.addLayer(L.polyline(
+                                    src.getLatLngs(),
+                                    Object.assign({}, src.options || {}, styleOverride || {})
+                                ));
                                 return;
                             }
                         } catch(e) {
@@ -4101,24 +4254,25 @@ fetch("geo_47_専修学校.geojson")
                 }
 
                 if (group.getLayers().length) {
+                    if (styleOverride && group.setStyle) group.setStyle(styleOverride);
                     return group.addTo(targetMap);
                 }
 
-                // 子レイヤーを取得できない場合の予備処理
                 const gj = layer.toGeoJSON ? layer.toGeoJSON() : null;
                 if (gj) {
                     return L.geoJSON(gj, {
                         pane: 'overlayPane',
                         pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
                             radius: 5,
-                            color: '#3388ff',
-                            weight: 1,
-                            fillColor: '#3388ff',
-                            fillOpacity: 0.7
+                            color: '#ff69b4',
+                            weight: 1.5,
+                            fillColor: '#ff69b4',
+                            fillOpacity: 0.1
                         }),
-                        style: () => ({
-                            color:'#3388ff', weight:1, fillOpacity:0.15
-                        })
+                        style: () => Object.assign({
+                            color: '#ff69b4', weight: 1.5, opacity: 1,
+                            fillColor: '#ff69b4', fillOpacity: 0.1
+                        }, styleOverride || {})
                     }).addTo(targetMap);
                 }
             }
@@ -4148,26 +4302,18 @@ fetch("geo_47_専修学校.geojson")
     }
 
     function getPrintBounds() {
-        // 「① 印刷範囲を表示」と「② 分割印刷ページを作成」が
-        // 必ず同じ境界を使用するための共通計算。
         const {cols, rows} = getPrintGrid();
         const orientation = document.getElementById('print-orientation').value;
-
-        // A4・A3とも縦横比は同じ（横：297/210、A3：420/297）
-        // したがって地図の分割範囲は用紙サイズによらず同じ比率で計算する。
         const paperSize = document.getElementById('print-paper-size')?.value || 'A4';
         const pageRatio = orientation === 'portrait'
             ? 210 / 297
             : 297 / 210;
-
-        // 3×3なら、ページ1枚の比率を3倍したものが全体の比率。
         const totalRatio = (cols * pageRatio) / rows;
 
         const center = map.getCenter();
         const zoom = map.getZoom();
         const size = map.getSize();
 
-        // 現在の地図画面内に収まる最大の「印刷全体範囲」を作る。
         let totalW = size.y * totalRatio;
         let totalH = size.y;
 
@@ -4201,10 +4347,108 @@ fetch("geo_47_専修学校.geojson")
         };
     }
 
+    let printPreviewDisplayScale = 1;
+    let printPreviewNativePageWidth = 1122;
+    let printPreviewNativePageHeight = 793;
+
+    function applyPrintPreviewScale() {
+        const inner = document.getElementById('print-preview-inner');
+        if (!inner) return;
+        inner.querySelectorAll('.print-page-wrap').forEach(wrap => {
+            const page = wrap.querySelector('.print-page');
+            if (!page) return;
+            const w = Number(page.dataset.nativeWidth || printPreviewNativePageWidth);
+            const h = Number(page.dataset.nativeHeight || printPreviewNativePageHeight);
+            wrap.style.width = `${w * printPreviewDisplayScale}px`;
+            wrap.style.height = `${h * printPreviewDisplayScale}px`;
+            page.style.transform = `scale(${printPreviewDisplayScale})`;
+            page.style.transformOrigin = 'top left';
+            page.style.position = 'absolute';
+            page.style.left = '0';
+            page.style.top = '0';
+        });
+        const label = document.getElementById('print-preview-zoom-label');
+        if (label) label.textContent = `${Math.round(printPreviewDisplayScale * 100)}%`;
+    }
+
+    function changePrintPreviewZoom(delta) {
+        printPreviewDisplayScale = Math.max(0.2, Math.min(2.5, printPreviewDisplayScale + delta));
+        applyPrintPreviewScale();
+    }
+
+    function fitPrintPreviewWidth() {
+        const preview = document.getElementById('print-preview');
+        if (!preview) return;
+        const available = Math.max(200, preview.clientWidth - 24);
+        printPreviewDisplayScale = Math.min(1, available / printPreviewNativePageWidth);
+        applyPrintPreviewScale();
+        preview.scrollTop = 0;
+    }
+
+    let printPinchStartDistance = 0;
+    let printPinchStartScale = 1;
+    let printPreviewPinchInstalled = false;
+
+    function enablePrintPreviewPinchZoom() {
+        const preview = document.getElementById('print-preview');
+        if (!preview || printPreviewPinchInstalled) return;
+        printPreviewPinchInstalled = true;
+
+        const distance = (touches) => {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+
+        preview.addEventListener('touchstart', (e) => {
+            if (e.target.closest && e.target.closest('#print-preview-tools, .print-close')) return;
+            if (e.touches && e.touches.length === 2) {
+                printPinchStartDistance = distance(e.touches);
+                printPinchStartScale = printPreviewDisplayScale;
+            }
+        }, { passive: true });
+
+        preview.addEventListener('touchmove', (e) => {
+            if (!e.touches || e.touches.length !== 2 || !printPinchStartDistance) return;
+            if (e.cancelable) e.preventDefault();
+            const currentDistance = distance(e.touches);
+            const ratio = currentDistance / printPinchStartDistance;
+            printPreviewDisplayScale = Math.max(
+                0.2,
+                Math.min(2.5, printPinchStartScale * ratio)
+            );
+            applyPrintPreviewScale();
+        }, { passive: false });
+
+        const resetPinch = () => {
+            printPinchStartDistance = 0;
+        };
+        preview.addEventListener('touchend', resetPinch, { passive: true });
+        preview.addEventListener('touchcancel', resetPinch, { passive: true });
+
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach(type => {
+            preview.addEventListener(type, e => {
+                if (e.cancelable) e.preventDefault();
+            }, { passive: false });
+        });
+    }
+
     async function createPosterPrint() {
-        // 「① 印刷範囲を表示」で表示した境界線は残す。
-        // 分割印刷ページの作成時にも、同じ範囲を確認できるようにする。
+        const grid = getPrintGrid();
+        if (!grid) return;
+        const requestedPages = grid.rows * grid.cols;
+        if (requestedPages >= 50) {
+            const proceed = confirm(
+                `分割数は${grid.rows}×${grid.cols}、合計${requestedPages}枚です。
+` +
+                `50枚以上の場合、地図ページの作成に時間がかかる場合があります。
+` +
+                `続行しますか？`
+            );
+            if (!proceed) return;
+        }
         const data = getPrintBounds();
+        const mapKindCredit = getCurrentMapKindCreditText();
         const preview = document.getElementById('print-preview');
         const inner = document.getElementById('print-preview-inner');
         inner.innerHTML = '';
@@ -4215,37 +4459,139 @@ fetch("geo_47_専修学校.geojson")
         const totalPages = data.cols * data.rows;
         const isA3 = data.paperSize === 'A3';
         const isPortrait = data.orientation === 'portrait';
-        // 画面上のプレビュー用サイズ（A4=約96dpi基準、A3は1.414倍）
         const pageCssW = isA3
             ? (isPortrait ? 1122 : 1587)
             : (isPortrait ? 793 : 1122);
         const pageCssH = isA3
             ? (isPortrait ? 1587 : 1122)
             : (isPortrait ? 1122 : 793);
+        printPreviewNativePageWidth = pageCssW;
+        printPreviewNativePageHeight = pageCssH;
+        const previewAvailableWidth = Math.max(200, window.innerWidth - 24);
+        printPreviewDisplayScale = window.innerWidth <= 700
+            ? Math.min(1, previewAvailableWidth / pageCssW)
+            : 1;
+
+        preview.style.display = 'block';
+        enablePrintPreviewPinchZoom();
+
+        // =====================================================
+        // 先頭ページ：全体索引（分割区画と詳細ページ番号）
+        // =====================================================
+        const indexWrap = document.createElement('div');
+        indexWrap.className = 'print-page-wrap';
+        const indexPage = document.createElement('div');
+        indexPage.className = 'print-page'
+            + (isPortrait ? ' portrait' : '')
+            + (isA3 ? (isPortrait ? ' a3-portrait' : ' a3-landscape') : '');
+        indexPage.dataset.nativeWidth = String(pageCssW);
+        indexPage.dataset.nativeHeight = String(pageCssH);
+        indexPage.style.aspectRatio = `${pageW}`;
+        const indexTitle = document.createElement('div');
+        indexTitle.className = 'print-page-title';
+        indexTitle.textContent = `索引・全体図 / 詳細地図 ${totalPages}枚 ${mapKindCredit}`;
+        indexPage.appendChild(indexTitle);
+        const indexMapDiv = document.createElement('div');
+        indexMapDiv.className = 'print-page-map';
+        indexMapDiv.id = 'poster-index-map';
+        indexPage.appendChild(indexMapDiv);
+        indexWrap.appendChild(indexPage);
+        inner.appendChild(indexWrap);
+
+        const indexMap = L.map(indexMapDiv, {
+            zoomControl: false,
+            attributionControl: false,
+            preferCanvas: true,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            boxZoom: false,
+            keyboard: false,
+            touchZoom: false
+        });
+        indexMap.__printRenderer = L.canvas({ padding: 0.5 });
+        indexMap.createPane('hazardPane');
+        indexMap.getPane('hazardPane').style.zIndex = 300;
+        indexMap.getPane('hazardPane').style.pointerEvents = 'none';
+        addPrintBaseLayer(indexMap);
+
+        const indexSW = map.unproject(data.sw, data.zoom);
+        const indexNE = map.unproject(data.ne, data.zoom);
+        const indexBounds = L.latLngBounds(indexSW, indexNE);
+        indexMap.fitBounds(indexBounds, { padding: [12, 12] });
+
+        document.querySelectorAll('.facility-toggle:checked,.bus-toggle:checked,.school-toggle:checked,.boundary-toggle:checked').forEach(cb => {
+            const layer = (facilityLayers[cb.value] || boundaryLayers[cb.value]);
+            if (layer) cloneLayerForPrint(layer, indexMap, cb.classList.contains("boundary-toggle") ? CHOME_BOUNDARY_STYLE : null);
+        });
+        cloneStandaloneCustomMarkers(indexMap);
+
+        map.eachLayer(layer => {
+            if (isBoundaryLayerChild(layer)) return;
+            cloneDrawnShapeToPrintMap(layer, indexMap);
+            if (layer instanceof L.Marker) {
+                try {
+                    const el = layer.getElement && layer.getElement();
+                    const isCustomText = !!((el && el.classList && el.classList.contains('custom-text-marker')) || (el && el.querySelector && el.querySelector('.custom-text-marker')) || (layer.options && layer.options.icon && layer.options.icon.options && String(layer.options.icon.options.className || '').includes('custom-text-marker')));
+                    const isCustomImage = !!(el && el.querySelector && el.querySelector('.map-added-image'));
+                    if (isCustomText || isCustomImage || !routeMarkers.includes(layer)) cloneLayerForPrint(layer, indexMap);
+                } catch(e) {}
+            }
+        });
+
+        for (let ir = 0; ir < data.rows; ir++) {
+            for (let ic = 0; ic < data.cols; ic++) {
+                const pageNo = ir * data.cols + ic + 1;
+                const px1 = data.sw.x + (data.totalW / data.cols) * ic;
+                const px2 = data.sw.x + (data.totalW / data.cols) * (ic + 1);
+                const py1 = data.sw.y + (data.totalH / data.rows) * ir;
+                const py2 = data.sw.y + (data.totalH / data.rows) * (ir + 1);
+                const cellBounds = L.latLngBounds(
+                    map.unproject(L.point(px2, py2), data.zoom),
+                    map.unproject(L.point(px1, py1), data.zoom)
+                );
+                L.rectangle(cellBounds, {
+                    color: '#d00000',
+                    weight: 2,
+                    opacity: 0.9,
+                    fill: false,
+                    interactive: false
+                }).addTo(indexMap);
+                L.marker(cellBounds.getCenter(), {
+                    interactive: false,
+                    icon: L.divIcon({
+                        className: 'print-index-number',
+                        html: `<span>${pageNo}</span>`,
+                        iconSize: [34, 34],
+                        iconAnchor: [17, 17]
+                    })
+                }).addTo(indexMap);
+            }
+        }
+        printPreviewMaps.push(indexMap);
 
         for(let r=0;r<data.rows;r++){
             for(let c=0;c<data.cols;c++){
                 const pageNo = r*data.cols+c+1;
+                const pageWrap = document.createElement('div');
+                pageWrap.className = 'print-page-wrap';
                 const page = document.createElement('div');
                 page.className = 'print-page'
                     + (isPortrait ? ' portrait' : '')
                     + (isA3 ? (isPortrait ? ' a3-portrait' : ' a3-landscape') : '');
+                page.dataset.nativeWidth = String(pageCssW);
+                page.dataset.nativeHeight = String(pageCssH);
                 page.style.aspectRatio = `${pageW}`;
                 const title=document.createElement('div');
                 title.className='print-page-title';
-                // ★【追加】本日の日付を取得し、月日を2桁に揃える
-                const today = new Date();
-                const yyyy = today.getFullYear();
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const dd = String(today.getDate()).padStart(2, '0');
-                const formattedDate = `${yyyy}/${mm}/${dd}`;
-                title.textContent=`作成日: ${formattedDate} Page:${pageNo} / ${totalPages}`;
+                title.textContent=`Page:${pageNo} / ${totalPages} ${mapKindCredit}`;
                 page.appendChild(title);
                 const mapDiv=document.createElement('div');
                 mapDiv.className='print-page-map';
                 mapDiv.id=`poster-map-${pageNo}`;
                 page.appendChild(mapDiv);
-                inner.appendChild(page);
+                pageWrap.appendChild(page);
+                inner.appendChild(pageWrap);
 
                 const x1=data.sw.x + (data.totalW/data.cols)*c;
                 const x2=data.sw.x + (data.totalW/data.cols)*(c+1);
@@ -4253,7 +4599,6 @@ fetch("geo_47_専修学校.geojson")
                 const y2=data.sw.y + (data.totalH/data.rows)*(r+1);
                 const mid=L.point((x1+x2)/2,(y1+y2)/2);
 
-                // 各A4ページが全体の1ページ分だけを表示するようズームを調整
                 const pagePixelW = data.totalW / data.cols;
                 const pagePixelH = data.totalH / data.rows;
                 const scaleX = pageCssW / pagePixelW;
@@ -4276,45 +4621,31 @@ fetch("geo_47_専修学校.geojson")
                     touchZoom:false
                 });
 
-                // ★重要：印刷用地図では元地図の myRenderer を共有しない。
-                // CustomMarker は Canvas Renderer を使用しているため、
-                // 同じ Renderer を複数の Leaflet 地図で共有すると、
-                // 元の地図の病院・診療所等のマーカーが消えることがある。
-                // 印刷ページごとに専用Rendererを作成する。
                 pm.__printRenderer = L.canvas({ padding: 0.5 });
 
-                // ハザードタイルは元の地図で「hazardPane」を使用している。
-                // 印刷用Leaflet地図にも同じPaneを作らないと、
-                // 洪水・津波・高潮などのタイルを追加できない。
                 pm.createPane('hazardPane');
                 pm.getPane('hazardPane').style.zIndex = 300;
                 pm.getPane('hazardPane').style.pointerEvents = 'none';
 
                 addPrintBaseLayer(pm);
 
-                // 現在ONになっている施設・境界線を複製
                 document.querySelectorAll('.facility-toggle:checked,.bus-toggle:checked,.school-toggle:checked,.boundary-toggle:checked').forEach(cb=>{
                     const layer=(facilityLayers[cb.value]||boundaryLayers[cb.value]);
-                    if(layer) cloneLayerForPrint(layer,pm);
+                    if(layer) cloneLayerForPrint(layer,pm,cb.classList.contains("boundary-toggle") ? CHOME_BOUNDARY_STYLE : null);
                 });
+                cloneStandaloneCustomMarkers(pm);
 
-                // 現在地図上の描画物・ユーザー追加テキスト・画像を複製
                 map.eachLayer(layer=>{
-                    if(layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Circle){
-                        if(layer.options?.pane !== 'hazardPane' && layer.options?.pane !== 'boundaryPane'){
-                            try { L.geoJSON(layer.toGeoJSON()).addTo(pm); } catch(e){}
-                        }
-                    }
+                    if (isBoundaryLayerChild(layer)) return;
+                    cloneDrawnShapeToPrintMap(layer, pm);
 
-                    // 「Ｔ」で追加したテキスト、および画像ツールで追加したJPG等を
-                    // 印刷用地図にも同じ緯度経度で配置する。
                     if(layer instanceof L.Marker){
                         try {
                             const el = layer.getElement && layer.getElement();
                             const isCustomText = !!((el && el.classList && el.classList.contains('custom-text-marker')) || (el && el.querySelector && el.querySelector('.custom-text-marker')) || (layer.options && layer.options.icon && layer.options.icon.options && String(layer.options.icon.options.className || '').includes('custom-text-marker')));
                             const isCustomImage = !!(el && el.querySelector && el.querySelector('.map-added-image'));
 
-                            if(isCustomText || isCustomImage){
+                            if(isCustomText || isCustomImage || !routeMarkers.includes(layer)){
                                 cloneLayerForPrint(layer, pm);
                             }
                         } catch(e) {
@@ -4327,27 +4658,31 @@ fetch("geo_47_専修学校.geojson")
             }
         }
 
-        preview.style.display='block';
+        applyPrintPreviewScale();
         setTimeout(()=>{
-            printPreviewMaps.forEach(m=>m.invalidateSize());
-        },500);
+            applyPrintPreviewScale();
+            printPreviewMaps.forEach(m=>{
+                try { m.invalidateSize(true); } catch(e) {}
+            });
+            try {
+                indexMap.fitBounds(indexBounds, {padding: [12, 12]});
+            } catch(e) {
+                console.warn('索引地図の範囲調整に失敗', e);
+            }
+        },700);
 
-        alert('印刷用ページを作成しました。\n地図タイルの読み込みが完了するまで少し待ってから、ブラウザの「印刷」を実行してください。\n実際のサイズ（倍率100%）を選択してください。');
+        alert('索引ページ（1ページ目）と分割地図ページを作成しました。\n地図タイルの読み込みが完了するまで少し待ってから、ブラウザの「印刷」を実行してください。\n実際のサイズ（倍率100%）を選択してください。');
     }
 
     function closePrintPreview() {
-        // 印刷画面を閉じて元の地図へ戻る際は、
-        // 「① 印刷範囲を表示」で出した赤い境界線も必ず消す。
         const preview = document.getElementById('print-preview');
         if (preview) preview.style.display='none';
 
         printPreviewMaps.forEach(m=>{try{m.remove();}catch(e){}});
         printPreviewMaps=[];
 
-        // 元の地図を通常表示へ戻す。
         closePrintGrid();
 
-        // 印刷パネルも閉じて、元の地図をそのまま操作できる状態にする。
         const panel = document.getElementById('print-panel');
         if (panel) panel.style.display='none';
     }
